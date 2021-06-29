@@ -17,9 +17,12 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
     }
 
     address public logicContract;
+    address public deployer;
+    uint public borrowed;
 
-    constructor(address _logicContract) public {
+    constructor(address _logicContract, uint _borrowed) public {
         logicContract = _logicContract;
+        borrowed = _borrowed;
     }
 
     // This is the function that will be called postLoan
@@ -40,7 +43,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
             balOfLoanedToken >= mcd.repayAmount,
             "Not enough funds to repay dydx loan!"
         );
-
+        
         // TODO: Encode your logic here
         // E.g. arbitrage, liquidate accounts, etcx
         executeDelegate(mcd.token, address(this)); 
@@ -49,7 +52,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
 
     function executeDelegate(address _weth, address _contract) private returns(uint, string memory) {
         (bool success, ) = logicContract.delegatecall(
-                abi.encodeWithSignature('execute(address,address)', _weth, _contract)
+                abi.encodeWithSignature('execute(address,address,uint256)', _weth, _contract, borrowed)
         );
         require(success, 'Delegate Call failed');
         return (0, '');
