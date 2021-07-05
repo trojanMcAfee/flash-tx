@@ -9,36 +9,33 @@ const soloMarginAddr = legos.dydx.soloMargin.address;
 const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const borrowed = parseEther('6478');
 let value;
-// const routerAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
-// const myAddr = '0x715358348287f44c8113439766b9433282110F6c';
-// const ORACLES = {
-//   addresses: [
-//     0x5b4247e58fe5a54a116e4a3be32b31be7030c8a3,
-//     0x688e8432e12620474d53b4a26eb2e84ebed4245c,
-//     0x2ed7e9fcd3c0568dc6167f0b8aee06a02cd9ebd8
-//   ],
-//   jobIds: [
-//     e67ddf1f394d44e79a9a2132efd00050,
-//     f2335e15bff140f4a26cee888c2ccfbf,
-//     a32d79b72f28437b8a30788ca62b0f21
-//   ],
-//   payments: [
-//     parseEther('1'),
-//     parseEther('1'),
-//     parseEther('1')
-//   ]
-// };
 
 
 async function main() {
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
   console.log('Deployers address: ', signerAddr);
+
+  //Creates the Service Agreement that will be used by the Chainlink nodes to make the 0x API calls
+  const PreCoordinator = await hre.ethers.getContractFactory('PreCoordinator');
+  const precoordinator = await PreCoordinator.deploy();
+  await precoordinator.deployed();
+  const tx = await precoordinator.createServiceAgreement();
+  const receipt = await tx.wait();
+  console.log('Pre-Coordinator address: ', precoordinator.address);
+  console.log('Service Agreement ID: ', receipt.logs[0].topics[1]);
+
+  //Deploys the contract from where the API calls through Chainlink are requested
+  const ChainlinkCall = await hre.ethers.getContractFactory('ChainlinkCall');
+  const chainlinkcall = await ChainlinkCall.deploy(precoordinator.address, receipt.logs[0].topics[1]);
+  await chainlinkcall.deployed();
   
+  //Deploys the logic contract
   const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
   const flashlogic = await FlashLoaner.deploy();
   await flashlogic.deployed();
   
+  //Deploys the proxy where the loan is requested
   const DydxFlashloaner = await hre.ethers.getContractFactory("DydxFlashloaner");
   const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
   await dxdxFlashloaner.deployed();
@@ -50,21 +47,13 @@ async function main() {
   await IWeth.deposit({ value });
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
-  // value = parseEther('1');
-  // await IWeth.deposit({ value });
-  // await IWeth.transfer(flashlogic.address, value); //sending the ETH for paying fees
   
 
-
-
-  //Creates the Service Agreement that will be used by the Chainlink nodes to make the 0x API calls
-  const PreCoordinator = await hre.ethers.getContractFactory('PreCoordinator');
-  const precoordinator = await PreCoordinator.deploy();
-  await precoordinator.deployed();
-  const tx = await precoordinator.createServiceAgreement();
-  const receipt = await tx.wait();
-  console.log('Pre-Coordinator address: ', precoordinator.address);
-  console.log('Service Agreement ID: ', receipt.logs[0].topics[1]);
+  /**
+   * See if I can pass chainlinkcall's address to initiateFlashloan
+   * then pass to CallAction, that passes to execute through delegate
+   * and calls getDelegatedPrice from execute with this address */ 
+   
   
 
 

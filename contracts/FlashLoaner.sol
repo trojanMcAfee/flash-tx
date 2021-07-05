@@ -2,12 +2,13 @@
 pragma solidity ^0.8.0;
 
 import './Swaper0x.sol';
+import './ChainlinkCall.sol';
 import './interfaces/MyILendingPool.sol';
 import './interfaces/MyIERC20.sol';
 
 import "hardhat/console.sol";
 
-contract FlashLoaner is Swaper0x {
+contract FlashLoaner is Swaper0x, ChainlinkCall {
 
     struct MyCustomData {
         address token;
@@ -19,6 +20,14 @@ contract FlashLoaner is Swaper0x {
     uint public borrowed;
 
     // receive() external payable {}
+
+    function getDelegatedPrice(address _chainlinkContract) private returns (uint, string memory) {
+        (bool success, bytes data) = _chainlinkContract.delegatecall(
+            abi.encodeWithSignature('getPrice()')
+        );
+        require(success, 'Second delegate call failed');
+        return (0, "");
+    }
 
     
     
@@ -42,8 +51,9 @@ contract FlashLoaner is Swaper0x {
         uint usdcBalance = MyIERC20(USDC).balanceOf(dYdXFlashloaner);
         console.log('USDC balance: ', usdcBalance / 10 ** 6);
 
-        string memory x = getRequestSELLBUY(USDC, BNT, usdcToSell);
-        console.log(x); // format to string usdcToSell
+        string memory apiURL = getRequestSELLBUY(USDC, BNT, usdcToSell);
+        getData(apiURL);        
+        // console.log(getPrice());
     }
 
 }

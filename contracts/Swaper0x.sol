@@ -1,11 +1,15 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
+import './libraries/Helpers.sol';
 import 'hardhat/console.sol';
+
 
 
 contract Swaper0x {
 
+    using Helpers for address;
+    using Helpers for uint;
 
     function getRequestSELLBUY(
         address _sellToken, 
@@ -17,17 +21,15 @@ contract Swaper0x {
         string memory buyStr = '&buyToken=0x';
         string memory buyAmountStr = '&buyAmount=';
 
-        // string memory x = toAsciiString(_sellToken);
-
 
         return string(abi.encodePacked(
             api0xUrl, 
             sellStr,
-           _toAsciiString(_sellToken), 
+            _sellToken._toAsciiString(),
             buyStr, 
-            _toAsciiString(_buyToken), 
+            _buyToken._toAsciiString(), 
             buyAmountStr, 
-            _buyAmount));
+            _buyAmount._uintToStr()));
     }
 
 
@@ -87,21 +89,45 @@ contract Swaper0x {
         //     return bstr;
         // }
 
-        function _toAsciiString(address x) private pure returns (string memory) {
-        bytes memory s = new bytes(40);
-        for (uint i = 0; i < 20; i++) {
-            bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
-            bytes1 hi = bytes1(uint8(b) / 16);
-            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-            s[2*i] = _char(hi);
-            s[2*i+1] = _char(lo);            
-        }
-            return string(s);
-        }
 
-        function _char(bytes1 b) private pure returns (bytes1 c) {
-            if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
-            else return bytes1(uint8(b) + 0x57);
-        }
+
+        // function _toAsciiString(address x) private pure returns (string memory) {
+        // bytes memory s = new bytes(40);
+        // for (uint i = 0; i < 20; i++) {
+        //     bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
+        //     bytes1 hi = bytes1(uint8(b) / 16);
+        //     bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+        //     s[2*i] = _char(hi);
+        //     s[2*i+1] = _char(lo);            
+        // }
+        //     return string(s);
+        // }
+
+        // function _char(bytes1 b) private pure returns (bytes1 c) {
+        //     if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        //     else return bytes1(uint8(b) + 0x57);
+        // }
+
+        // function _uintToStr(uint _i) private pure returns (string memory _uintAsString) {
+        //     if (_i == 0) {
+        //         return "0";
+        //     }
+        //     uint j = _i;
+        //     uint len;
+        //     while (j != 0) {
+        //         len++;
+        //         j /= 10;
+        //     }
+        //     bytes memory bstr = new bytes(len);
+        //     uint k = len;
+        //     while (_i != 0) {
+        //         k = k-1;
+        //         uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+        //         bytes1 b1 = bytes1(temp);
+        //         bstr[k] = b1;
+        //         _i /= 10;
+        //     }
+        //     return string(bstr);
+        // }
 
 }
