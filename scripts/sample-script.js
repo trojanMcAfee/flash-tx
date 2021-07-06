@@ -1,12 +1,16 @@
 const { legos } = require("@studydefi/money-legos");
+const uniRouterABI = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json').abi;
 const fetch = require("node-fetch");
 const { createQueryString, API_QUOTE_URL } = require('./relayer');
 
 
 const { parseEther, parseUnits, formatEther } = ethers.utils;
+const { MaxUint256 } = ethers.constants;
 
 const soloMarginAddr = legos.dydx.soloMargin.address;
 const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const linkAddr = '0x514910771af9ca656af840dff83e8264ecf986ca';
+const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 const borrowed = parseEther('6478');
 let value;
 
@@ -25,6 +29,7 @@ async function main() {
   console.log('Pre-Coordinator address: ', precoordinator.address);
   console.log('Service Agreement ID: ', receipt.logs[0].topics[1]);
 
+
   //Deploys the contract from where the API calls through Chainlink are requested
   const ChainlinkCall = await hre.ethers.getContractFactory('ChainlinkCall');
   const chainlinkcall = await ChainlinkCall.deploy(precoordinator.address, receipt.logs[0].topics[1]);
@@ -37,7 +42,7 @@ async function main() {
   
   //Deploys the proxy where the loan is requested
   const DydxFlashloaner = await hre.ethers.getContractFactory("DydxFlashloaner");
-  const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
+  const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed, chainlinkcall.address);
   await dxdxFlashloaner.deployed();
   console.log("dYdX_flashloaner deployed to:", dxdxFlashloaner.address);
 
@@ -47,16 +52,24 @@ async function main() {
   await IWeth.deposit({ value });
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
+  //Sends the LINK payment (5) to the contract that delegate-calls the oracles (from the service agreement)
+  value = parseEther('0.5');
+  const uniswapRouter = await hre.ethers.getContractAt(uniRouterABI, uniswapRouterAddr);
+  await uniswapRouter.swapETHForExactTokens(
+    parseEther('6'), 
+    [wethAddr, linkAddr], 
+    flashlogic.address, 
+    MaxUint256, {
+      value 
+    });
+
+
+
+
   
 
-  /**
-   * See if I can pass chainlinkcall's address to initiateFlashloan
-   * then pass to CallAction, that passes to execute through delegate
-   * and calls getDelegatedPrice from execute with this address */ 
    
   
-
-
   await dxdxFlashloaner.initiateFlashLoan(soloMarginAddr, wethAddr, borrowed);
 
 

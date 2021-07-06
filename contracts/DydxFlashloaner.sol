@@ -18,11 +18,13 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
 
     address public logicContract;
     address public deployer;
+    address public chainlinkCallContract;
     uint public borrowed;
 
-    constructor(address _logicContract, uint _borrowed) public {
+    constructor(address _logicContract, uint _borrowed, address _chainlinkCallContract) public {
         logicContract = _logicContract;
         borrowed = _borrowed;
+        chainlinkCallContract = _chainlinkCallContract;
     }
 
     // This is the function that will be called postLoan
@@ -52,7 +54,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
 
     function executeDelegate(address _weth, address _contract) private returns(uint, string memory) {
         (bool success, ) = logicContract.delegatecall(
-                abi.encodeWithSignature('execute(address,address,uint256)', _weth, _contract, borrowed)
+                abi.encodeWithSignature('execute(address,address,uint256,address)', _weth, _contract, borrowed, chainlinkCallContract)
         );
         require(success, 'Delegate Call failed');
         return (0, '');

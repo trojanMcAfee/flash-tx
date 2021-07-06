@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
+import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import './Swaper0x.sol';
-import './ChainlinkCall.sol';
 import './interfaces/MyILendingPool.sol';
 import './interfaces/MyIERC20.sol';
 
 import "hardhat/console.sol";
 
-contract FlashLoaner is Swaper0x, ChainlinkCall {
+contract FlashLoaner is Swaper0x {
 
     struct MyCustomData {
         address token;
@@ -17,22 +17,22 @@ contract FlashLoaner is Swaper0x, ChainlinkCall {
 
     address public logicContract;
     address public deployer;
+    address public chainlinkCallContract;
     uint public borrowed;
 
-    // receive() external payable {}
 
-    function getDelegatedPrice(address _chainlinkContract) private returns (uint, string memory) {
-        (bool success, bytes data) = _chainlinkContract.delegatecall(
-            abi.encodeWithSignature('getPrice()')
+    function getDelegatedPrice(address _chainlinkCallContract, string memory _apiUrl) private returns (uint, string memory, bytes memory) {
+        (bool success, bytes memory data) = _chainlinkCallContract.delegatecall(
+            abi.encodeWithSignature('getData(string)', _apiUrl)
         );
+        console.log(success);
         require(success, 'Second delegate call failed');
-        return (0, "");
+        return (0, "", data);
     }
 
-    
-    
 
-    function execute(address _weth, address _contract, uint256 _borrowed) external {
+
+    function execute(address _weth, address _contract, uint256 _borrowed, address _chainlinkCallContract) external {
 
         MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
         MyIERC20 weth = MyIERC20(_weth);
@@ -47,13 +47,14 @@ contract FlashLoaner is Swaper0x, ChainlinkCall {
        lendingPoolAAVE.deposit(_weth, _borrowed, dYdXFlashloaner, 0);
        lendingPoolAAVE.borrow(USDC, aaveUSDCloan, 2, 0, dYdXFlashloaner);
 
-        // address aWETH = 0x030bA81f1c18d280636F32af80b9AAd02Cf0854e;
         uint usdcBalance = MyIERC20(USDC).balanceOf(dYdXFlashloaner);
         console.log('USDC balance: ', usdcBalance / 10 ** 6);
 
         string memory apiURL = getRequestSELLBUY(USDC, BNT, usdcToSell);
-        getData(apiURL);        
-        // console.log(getPrice());
+        (, , bytes memory data) = getDelegatedPrice(_chainlinkCallContract, apiURL);
+        (bytes memory x) = abi.decode(data, (bytes));
+        console.logBytes(x);
+        
     }
 
 }
