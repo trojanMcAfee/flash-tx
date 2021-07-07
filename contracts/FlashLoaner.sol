@@ -26,7 +26,7 @@ contract FlashLoaner is Swaper0x {
             abi.encodeWithSignature('getData(string)', _apiUrl)
         );
         console.log(success);
-        require(success, 'Second delegate call failed');
+        require(success, 'Second delegate call failed');  
         return (0, "", data);
     }
 
@@ -52,8 +52,8 @@ contract FlashLoaner is Swaper0x {
 
         string memory apiURL = getRequestSELLBUY(USDC, BNT, usdcToSell);
         (, , bytes memory data) = getDelegatedPrice(_chainlinkCallContract, apiURL);
-        (bytes memory x) = abi.decode(data, (bytes));
-        console.logBytes(x);
+        (uint price0xCall) = abi.decode(data, (uint));
+        console.log(price0xCall);
         
     }
 

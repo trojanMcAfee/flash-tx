@@ -10,16 +10,16 @@ contract PreCoordinator {
     IPreCoordinator precoordinator = IPreCoordinator(0xf6c446Cb58735c52c35B0a22af13BDb39869D753);
 
     bytes32[] private jobIds = [
-        bytes32('e67ddf1f394d44e79a9a2132efd00050'),
-        bytes32('f2335e15bff140f4a26cee888c2ccfbf'),
-        bytes32('a32d79b72f28437b8a30788ca62b0f21')
+        bytes32('1bc4f827ff5942eaaa7540b7dd1e20b9'), //e67ddf1f394d44e79a9a2132efd00050
+        bytes32('e67ddf1f394d44e79a9a2132efd00050'), //f2335e15bff140f4a26cee888c2ccfbf
+        bytes32('69384ee664624bbd8069a9be17416da2') //a32d79b72f28437b8a30788ca62b0f21
     ];
 
 
     address[] private oraclesAddr = [
-        0x5b4247e58fe5a54A116e4A3BE32b31BE7030C8A3,
-        0x688E8432e12620474d53b4A26Eb2E84eBEd4245c,
-        0x2Ed7E9fCd3c0568dC6167F0b8aEe06A02CD9ebd8
+        0x240BaE5A27233Fd3aC5440B5a598467725F7D1cd, //0x5b4247e58fe5a54A116e4A3BE32b31BE7030C8A3
+        0x5b4247e58fe5a54A116e4A3BE32b31BE7030C8A3, //0x688E8432e12620474d53b4A26Eb2E84eBEd4245c
+        0x9308B0Bd23794063423f484Cd21c59eD38898108 //0x2Ed7E9fCd3c0568dC6167F0b8aEe06A02CD9ebd8
     ];
 
     uint[] private payment = [

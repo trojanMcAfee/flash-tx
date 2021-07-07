@@ -43,7 +43,7 @@ contract ChainlinkCall is ChainlinkClient {
         return price;
     }
 
-    function getPrice() internal returns (uint) {
+    function getPrice() internal view returns (uint) {
         return currentPrice;
     }
 

@@ -8,7 +8,7 @@ const { parseEther, parseUnits, formatEther } = ethers.utils;
 const { MaxUint256 } = ethers.constants;
 
 const soloMarginAddr = legos.dydx.soloMargin.address;
-const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'; 
 const linkAddr = '0x514910771af9ca656af840dff83e8264ecf986ca';
 const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 const borrowed = parseEther('6478');
