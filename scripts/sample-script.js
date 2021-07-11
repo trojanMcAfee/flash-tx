@@ -1,9 +1,9 @@
 const { legos } = require("@studydefi/money-legos");
 const uniRouterABI = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json').abi;
 const fetch = require("node-fetch");
-const { createQueryString, API_QUOTE_URL } = require('./relayer');
+const quote  = require('./relayer');
 
-
+const { createQueryString, API_QUOTE_URL } = require('./relayer.js');
 const { parseEther, parseUnits, formatEther } = ethers.utils;
 const { MaxUint256 } = ethers.constants;
 
@@ -42,51 +42,73 @@ async function main() {
   
   //Deploys the proxy where the loan is requested
   const DydxFlashloaner = await hre.ethers.getContractFactory("DydxFlashloaner");
-  const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed, chainlinkcall.address);
+  const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
   await dxdxFlashloaner.deployed();
   console.log("dYdX_flashloaner deployed to:", dxdxFlashloaner.address);
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
   const IWeth = await hre.ethers.getContractAt('IWETH', wethAddr);
-  value = parseUnits('2', "gwei");
+  value = parseUnits('2', "gwei"); //gwei
   await IWeth.deposit({ value });
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
+  value = parseEther('1');
+  await signer.sendTransaction({
+    to: dxdxFlashloaner.address,
+    value
+  });
+
   //Sends the LINK payment (5) to the contract that delegate-calls the oracles (from the service agreement)
-  value = parseEther('0.5');
-  const uniswapRouter = await hre.ethers.getContractAt(uniRouterABI, uniswapRouterAddr);
-  await uniswapRouter.swapETHForExactTokens(
-    parseEther('6'), 
-    [wethAddr, linkAddr], 
-    flashlogic.address, 
-    MaxUint256, {
-      value 
-    });
+  // value = parseEther('0.5');
+  // const uniswapRouter = await hre.ethers.getContractAt(uniRouterABI, uniswapRouterAddr);
+  // await uniswapRouter.swapETHForExactTokens(
+  //   parseEther('6'), 
+  //   [wethAddr, linkAddr], 
+  //   flashlogic.address, 
+  //   MaxUint256, {
+  //     value 
+  //   });
 
+/*****  0x quotes *********/
 
-
-
+  const sellAmount = parseUnits('11184.9175', 'gwei');
+  const qs = createQueryString({
+    sellToken: 'USDC',
+    buyToken: 'BNT',
+    sellAmount
+  });
   
+  const quoteUrl = `${API_QUOTE_URL}?${qs}`;
+  const response = await fetch(quoteUrl);
+  const quote = await response.json();
+
+  // console.log('the quote: ', quote);
+  const quoteAddr = [
+    quote.sellTokenAddress,
+    quote.buyTokenAddress,
+    quote.allowanceTarget, //spender
+    quote.to //swapTarget
+    // quote.data //swapCallData
+  ];
+
+  // console.log(quote);
+  // console.log(formatEther(quote.buyAmount));
+
+/*****  0x quotes *********/
 
    
   
-  await dxdxFlashloaner.initiateFlashLoan(soloMarginAddr, wethAddr, borrowed);
+  
+  await dxdxFlashloaner.initiateFlashLoan(
+    soloMarginAddr, 
+    wethAddr, 
+    borrowed,
+    quoteAddr,
+    quote.data  
+  );
 
 
 
-
-  // const sellAmount = parseUnits('11184.9175', 'gwei');
-  // const qs = createQueryString({
-  //   sellToken: 'USDC',
-  //   buyToken: 'BNT',
-  //   sellAmount
-  // });
-
-  // const quoteUrl = `${API_QUOTE_URL}?${qs}`;
-  // const response = await fetch(quoteUrl);
-  // const quote = await response.json();
-  // console.log(quote);
-  // console.log(formatEther(quote.buyAmount));
 
 
 }

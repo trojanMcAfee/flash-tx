@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: Unlicense
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
@@ -10,21 +11,35 @@ import "hardhat/console.sol";
 
 
 contract DydxFlashloaner is ICallee, DydxFlashloanBase {
+    struct ZrxQuote {
+        address sellTokenAddress;
+        address buyTokenAddress;
+        address spender;
+        address swapTarget;
+        bytes swapCallData;
+    }
+
     struct MyCustomData {
         address token;
         uint256 repayAmount;
-    }
+    } 
 
     address public logicContract;
-    address public deployer;
-    address public chainlinkCallContract;
+    // address public deployer;
+    // address public chainlinkCallContract;
     uint public borrowed;
 
-    constructor(address _logicContract, uint _borrowed, address _chainlinkCallContract) public {
+    constructor(address _logicContract, uint _borrowed) public {
         logicContract = _logicContract;
         borrowed = _borrowed;
-        chainlinkCallContract = _chainlinkCallContract;
+        // chainlinkCallContract = _chainlinkCallContract;
     }
+
+    function() external payable {
+        require(msg.data.length == 0);
+        address(this).transfer(msg.value);
+    }
+
 
     // This is the function that will be called postLoan
     // i.e. Encode the logic to handle your flashloaned funds here
@@ -33,9 +48,9 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         Account.Info memory account,
         bytes memory data
     ) public {
-        MyCustomData memory mcd = abi.decode(data, (MyCustomData));
+        (MyCustomData memory mcd, ZrxQuote memory zrx) = abi.decode(data, (MyCustomData, ZrxQuote));
         uint256 balOfLoanedToken = IERC20(mcd.token).balanceOf(address(this));
-
+        
         // Note that you can ignore the line below
         // if your dydx account (this contract in this case)
         // has deposited at least ~2 Wei of assets into the account
@@ -47,22 +62,39 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         
         // TODO: Encode your logic here
         // E.g. arbitrage, liquidate accounts, etcx
-        executeDelegate(mcd.token, address(this)); 
+        executeDelegate(mcd.token, address(this), zrx); 
     }
 
 
-    function executeDelegate(address _weth, address _contract) private returns(uint, string memory) {
+    function executeDelegate(address _weth, address _contract, ZrxQuote memory _zrxQuote) private returns(uint, string memory) {
         (bool success, ) = logicContract.delegatecall(
-                abi.encodeWithSignature('execute(address,address,uint256,address)', _weth, _contract, borrowed, chainlinkCallContract)
+                abi.encodeWithSignature(
+                    'execute(address,address,uint256,(address,address,address,address,bytes))',
+                     _weth, _contract, borrowed, _zrxQuote
+                )
         );
         require(success, 'Delegate Call failed');
         return (0, '');
     }
 
 
-    function initiateFlashLoan(address _solo, address _token, uint256 _amount)
-        external
+    function initiateFlashLoan(
+        address _solo, 
+        address _token, 
+        uint256 _amount, 
+        address[] calldata _quoteAddr, 
+        bytes calldata _quoteData
+    ) external
     {
+        ZrxQuote memory zrxQuote = ZrxQuote({
+            sellTokenAddress: _quoteAddr[0],
+            buyTokenAddress: _quoteAddr[1],
+            spender: _quoteAddr[2],
+            swapTarget: _quoteAddr[3],
+            swapCallData: _quoteData
+        });
+
+
         ISoloMargin solo = ISoloMargin(_solo);
 
         // Get marketId from token address
@@ -81,7 +113,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         operations[0] = _getWithdrawAction(marketId, _amount);
         operations[1] = _getCallAction(
             // Encode MyCustomData for callFunction
-            abi.encode(MyCustomData({token: _token, repayAmount: repayAmount}))
+            abi.encode(MyCustomData({token: _token, repayAmount: repayAmount}), zrxQuote)
         );
         operations[2] = _getDepositAction(marketId, repayAmount);
 
