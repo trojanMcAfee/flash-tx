@@ -18,4 +18,7 @@ interface MyILendingPool {
     address onBehalfOf
   ) external;
 
+  function paused() external view returns (bool);
+  function getReservesList() external view returns (address[] memory);
+
 }

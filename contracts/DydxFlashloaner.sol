@@ -17,6 +17,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         address spender;
         address swapTarget;
         bytes swapCallData;
+        uint gas;
     }
 
     struct MyCustomData {
@@ -35,10 +36,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         // chainlinkCallContract = _chainlinkCallContract;
     }
 
-    function() external payable {
-        require(msg.data.length == 0);
-        address(this).transfer(msg.value);
-    }
+    function() external payable {}
 
 
     // This is the function that will be called postLoan
@@ -66,13 +64,18 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
     }
 
 
+
     function executeDelegate(address _weth, address _contract, ZrxQuote memory _zrxQuote) private returns(uint, string memory) {
-        (bool success, ) = logicContract.delegatecall(
+        console.log('on execute delegate: ', msg.sender);
+        (bool success, bytes memory data) = logicContract.call(
                 abi.encodeWithSignature(
-                    'execute(address,address,uint256,(address,address,address,address,bytes))',
+                    'execute(address,address,uint256,(address,address,address,address,bytes,uint256))',
                      _weth, _contract, borrowed, _zrxQuote
                 )
         );
+        if (!success) {
+            console.log(_getRevertMsg(data));
+        }
         require(success, 'Delegate Call failed');
         return (0, '');
     }
@@ -83,7 +86,8 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         address _token, 
         uint256 _amount, 
         address[] calldata _quoteAddr, 
-        bytes calldata _quoteData
+        bytes calldata _quoteData,
+        uint _gas 
     ) external
     {
         ZrxQuote memory zrxQuote = ZrxQuote({
@@ -91,10 +95,11 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
             buyTokenAddress: _quoteAddr[1],
             spender: _quoteAddr[2],
             swapTarget: _quoteAddr[3],
-            swapCallData: _quoteData
+            swapCallData: _quoteData,
+            gas: _gas
         });
 
-
+        console.log('on initiate: ', msg.sender);
         ISoloMargin solo = ISoloMargin(_solo);
 
         // Get marketId from token address
@@ -121,5 +126,17 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         accountInfos[0] = _getAccountInfo();
 
         solo.operate(accountInfos, operations);
+    }
+    
+
+    function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
+        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
+        if (_returnData.length < 68) return 'Transaction reverted silently';
+
+        assembly {
+            // Slice the sighash.
+            _returnData := add(_returnData, 0x04)
+        }
+        return abi.decode(_returnData, (string)); // All that remains is the revert string
     }
 }

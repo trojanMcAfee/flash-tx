@@ -52,6 +52,7 @@ async function main() {
   await IWeth.deposit({ value });
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
+
   value = parseEther('1');
   await signer.sendTransaction({
     to: dxdxFlashloaner.address,
@@ -71,9 +72,9 @@ async function main() {
 
 /*****  0x quotes *********/
 
-  const sellAmount = parseUnits('11184.9175', 'gwei');
+  const sellAmount = parseUnits('184.9175', 'gwei');
   const qs = createQueryString({
-    sellToken: 'USDC',
+    sellToken: 'UNI',
     buyToken: 'BNT',
     sellAmount
   });
@@ -92,19 +93,21 @@ async function main() {
   ];
 
   // console.log(quote);
+  console.log('value of the quote: ', quote.value);
   // console.log(formatEther(quote.buyAmount));
 
 /*****  0x quotes *********/
 
    
   
-  
+  // value = parseEther('1');
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
     borrowed,
     quoteAddr,
-    quote.data  
+    quote.data,
+    quote.gas
   );
 
 
