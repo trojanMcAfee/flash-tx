@@ -63,7 +63,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         executeDelegate(mcd.token, address(this), zrx); 
     }
 
-
+/*** Part that matters */
 
     function executeDelegate(address _weth, address _contract, ZrxQuote memory _zrxQuote) private returns(uint, string memory) {
         console.log('on execute delegate: ', msg.sender);
@@ -79,7 +79,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         require(success, 'Delegate Call failed');
         return (0, '');
     }
-
+/***** End  */
 
     function initiateFlashLoan(
         address _solo, 

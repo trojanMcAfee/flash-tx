@@ -56,6 +56,8 @@ contract FlashLoaner {
         // address BNT = 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C;
         uint aaveUSDCloan = 100000 * 10 ** 18; //17895868 * 10 ** 6 --- change it to UNI from USDC just to test with a 18 decimals coin. That's why the var name differs
         
+        /***** Part that matters **** */
+
         console.log('hi');
         weth.approve(address(lendingPoolAAVE), _borrowed); //approves aave's liquidity pool for weth expenditure
         console.log('hi4');
@@ -75,7 +77,7 @@ contract FlashLoaner {
            console.log('error number: ', num);
        }
 
-       /*** Problem */
+       /*** End of Problem and part that matters */
        
        console.log('aWETH balance: ', aWETH.balanceOf(msg.sender));
         console.log('hi2');
