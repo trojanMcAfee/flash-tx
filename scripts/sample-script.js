@@ -39,6 +39,7 @@ async function main() {
   const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
   const flashlogic = await FlashLoaner.deploy();
   await flashlogic.deployed();
+  console.log('flashlogic deployed to: ', flashlogic.address);
   
   //Deploys the proxy where the loan is requested
   const DydxFlashloaner = await hre.ethers.getContractFactory("DydxFlashloaner");
@@ -52,6 +53,12 @@ async function main() {
   await IWeth.deposit({ value });
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
+  //Modified lendingPool AAVE
+  // const AAVE = await hre.ethers.getContractFactory('LendingPool2')
+  // const aave = await AAVE.deploy();
+  // await aave.deployed();
+
+  // console.log('this is paused: ', await aave.paused());
 
   value = parseEther('1');
   await signer.sendTransaction({
@@ -72,7 +79,7 @@ async function main() {
 
 /*****  0x quotes *********/
 
-  const sellAmount = parseUnits('184.9175', 'gwei');
+  const sellAmount = 150 //parseUnits('150', 'gwei');
   const qs = createQueryString({
     sellToken: 'UNI',
     buyToken: 'BNT',
@@ -92,7 +99,8 @@ async function main() {
     // quote.data //swapCallData
   ];
 
-  // console.log(quote);
+  console.log('sellAmount: ', (quote.sellAmount / 10 ** 18).toFixed(20));
+  console.log('this is the quote: ', quote);
   console.log('value of the quote: ', quote.value);
   // console.log(formatEther(quote.buyAmount));
 
@@ -100,7 +108,7 @@ async function main() {
 
    
   
-  // value = parseEther('1');
+// value = parseEther('1');
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 

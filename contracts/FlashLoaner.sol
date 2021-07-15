@@ -29,7 +29,7 @@ contract FlashLoaner {
     address public logicContract;
     // address public deployer;
     // address public chainlinkCallContract;
-    uint public borrowed; 
+    uint public borrowed;
 
 
     // function getDelegatedPrice(address _chainlinkCallContract, string memory _apiUrl) private returns (uint, string memory, bytes memory) {
@@ -41,7 +41,7 @@ contract FlashLoaner {
     //     return (0, "", data);
     // }
 
-    receive() external payable {}
+    receive() external payable {} 
 
 
 
@@ -54,40 +54,19 @@ contract FlashLoaner {
         // address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
         address UNI = 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984;
         // address BNT = 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C;
-        uint aaveUSDCloan = 100000 * 10 ** 18; //17895868 * 10 ** 6 --- change it to UNI from USDC just to test with a 18 decimals coin. That's why the var name differs
+        uint aaveUSDCloan = 150 * 10 ** 18; //17895868 * 10 ** 6 
+
+        weth.approve(address(lendingPoolAAVE), _borrowed); 
+
+        lendingPoolAAVE.deposit(_weth, _borrowed, address(this), 0); //_weth, _borrowed, dYdXFlashloaner, 0
+
+       lendingPoolAAVE.borrow(UNI, aaveUSDCloan, 2, 0, address(this)); //USDC
         
-        /***** Part that matters **** */
-
-        console.log('hi');
-        weth.approve(address(lendingPoolAAVE), _borrowed); //approves aave's liquidity pool for weth expenditure
-        console.log('hi4');
-        console.log('after execute is called: ', msg.sender);
-        uint x = weth.balanceOf(msg.sender); // checks the msg.sender has the tokens to deposit
-        console.log('WETH balance of msg.sender: ', x);
-        console.log(msg.sender == dYdXFlashloaner);
-        console.log('borrowed: ', _borrowed);
-        console.log('reserves list: ', lendingPoolAAVE.getReservesList().length);  //checks that the interface is working fine 
-
-        /*** Problem */
- 
-       try lendingPoolAAVE.deposit(_weth, _borrowed, msg.sender, 0) { //_weth, _borrowed, dYdXFlashloaner, 0
-           console.log('success');
-       } catch (bytes memory data) {
-           (uint256 num) = abi.decode(data, (uint256));
-           console.log('error number: ', num);
-       }
-
-       /*** End of Problem and part that matters */
-       
-       console.log('aWETH balance: ', aWETH.balanceOf(msg.sender));
-        console.log('hi2');
-       lendingPoolAAVE.borrow(UNI, aaveUSDCloan, 2, 0, dYdXFlashloaner); //USDC
-        console.log('hi3');
-        uint usdcBalance = MyIERC20(UNI).balanceOf(dYdXFlashloaner); //USDC
+        uint usdcBalance = MyIERC20(UNI).balanceOf(address(this)); //USDC
         console.log('USDC balance: ', usdcBalance / 10 ** 18); //usdcBalance / 10 ** 6
-        console.log('msg.sender on execute: ', msg.sender);
 
         
+
 
         fillQuote(
             _zrxQuote.sellTokenAddress,
@@ -115,8 +94,8 @@ contract FlashLoaner {
         uint gas
     ) private   
     {        
-        console.log('sell token balance: ', MyIERC20(sellToken).balanceOf(address(this)));
-        console.log('sell token balance of msg.sender: ', MyIERC20(sellToken).balanceOf(msg.sender));
+        console.log('sell token balance of contract that calls the swap: ', (MyIERC20(sellToken).balanceOf(address(this))) / 10 ** 18);
+        // console.log('sell token balance of msg.sender: ', MyIERC20(sellToken).balanceOf(msg.sender));
 
         
         uint256 boughtAmount = MyIERC20(buyToken).balanceOf(address(this));
@@ -124,19 +103,22 @@ contract FlashLoaner {
         require(MyIERC20(sellToken).approve(spender, type(uint).max));
 
         // console.logBytes(swapCallData);
-        console.log('hi6');
-        console.log('tx.origin: ', tx.origin);
+        // console.log('hi6');
+        // console.log('tx.origin: ', tx.origin);
         console.log('contract that calls the swap: ', address(this));
         console.log('ETH balance of the contract: ', address(this).balance);
-        console.log('msg.value: ', msg.value);
-        console.log('gas for the call: ', gas);
-        console.log('msg.sender on fillQuote: ', msg.sender);
-        console.log('spender (swapTarget): ', swapTarget);
-        console.log('remaining gas: ', gasleft());
-        (bool success, bytes memory returnData) = swapTarget.call{value: address(this).balance, gas: gas}(swapCallData);
+        // console.log('msg.value: ', msg.value);
+        // console.log('gas for the call: ', gas);
+        // console.log('msg.sender on fillQuote: ', msg.sender);
+        // console.log('spender (swapTarget): ', swapTarget);
+        // console.log('remaining gas: ', gasleft());
+        (bool success, bytes memory returnData) = swapTarget.call{value: 0}(swapCallData);
         console.log(success);
+        // (uint256 z) = abi.decode(returnData, (uint256));
+        // console.log('this is z: ', z);
         require(success, 'SWAP_CALL_FAILED');
         console.log('hi5');
+        console.log('balance on BNT after swap: ', MyIERC20(buyToken).balanceOf(address(this)));
 
         payable(msg.sender).transfer(address(this).balance);
         console.log(boughtAmount);

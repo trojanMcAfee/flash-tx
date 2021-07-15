@@ -28,7 +28,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
     address public logicContract;
     // address public deployer;
     // address public chainlinkCallContract;
-    uint public borrowed;
+    uint public borrowed; 
 
     constructor(address _logicContract, uint _borrowed) public {
         logicContract = _logicContract;
@@ -60,10 +60,10 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         
         // TODO: Encode your logic here
         // E.g. arbitrage, liquidate accounts, etcx
+        IERC20(mcd.token).transfer(logicContract, borrowed);
         executeDelegate(mcd.token, address(this), zrx); 
     }
 
-/*** Part that matters */
 
     function executeDelegate(address _weth, address _contract, ZrxQuote memory _zrxQuote) private returns(uint, string memory) {
         console.log('on execute delegate: ', msg.sender);
@@ -79,7 +79,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         require(success, 'Delegate Call failed');
         return (0, '');
     }
-/***** End  */
+
 
     function initiateFlashLoan(
         address _solo, 
