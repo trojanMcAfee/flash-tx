@@ -5,19 +5,19 @@ pragma experimental ABIEncoderV2;
 import "@studydefi/money-legos/dydx/contracts/DydxFlashloanBase.sol";
 import "@studydefi/money-legos/dydx/contracts/ICallee.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./libraries/Helpers.sol";
 
 import "hardhat/console.sol";
 
 
-
 contract DydxFlashloaner is ICallee, DydxFlashloanBase {
+
     struct ZrxQuote {
         address sellTokenAddress;
         address buyTokenAddress;
         address spender;
         address swapTarget;
         bytes swapCallData;
-        uint gas;
     }
 
     struct MyCustomData {
@@ -26,17 +26,12 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
     } 
 
     address public logicContract;
-    // address public deployer;
-    // address public chainlinkCallContract;
     uint public borrowed; 
 
     constructor(address _logicContract, uint _borrowed) public {
         logicContract = _logicContract;
         borrowed = _borrowed;
-        // chainlinkCallContract = _chainlinkCallContract;
     }
-
-    function() external payable {}
 
 
     // This is the function that will be called postLoan
@@ -60,21 +55,21 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         
         // TODO: Encode your logic here
         // E.g. arbitrage, liquidate accounts, etcx
+        console.log('WETH amount withdrawn from flashloan: ', (IERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 10 ** 18);
         IERC20(mcd.token).transfer(logicContract, borrowed);
-        executeDelegate(mcd.token, address(this), zrx); 
+        executeCall(mcd.token, zrx); 
     }
 
 
-    function executeDelegate(address _weth, address _contract, ZrxQuote memory _zrxQuote) private returns(uint, string memory) {
-        console.log('on execute delegate: ', msg.sender);
+    function executeCall(address _weth, ZrxQuote memory _zrxQuote) private returns(uint, string memory) {
         (bool success, bytes memory data) = logicContract.call(
                 abi.encodeWithSignature(
-                    'execute(address,address,uint256,(address,address,address,address,bytes,uint256))',
-                     _weth, _contract, borrowed, _zrxQuote
+                    'execute(address,uint256,(address,address,address,address,bytes))',
+                     _weth, borrowed, _zrxQuote
                 )
         );
         if (!success) {
-            console.log(_getRevertMsg(data));
+            console.log(Helpers._getRevertMsg(data));
         }
         require(success, 'Delegate Call failed');
         return (0, '');
@@ -86,8 +81,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         address _token, 
         uint256 _amount, 
         address[] calldata _quoteAddr, 
-        bytes calldata _quoteData,
-        uint _gas 
+        bytes calldata _quoteData
     ) external
     {
         ZrxQuote memory zrxQuote = ZrxQuote({
@@ -95,11 +89,9 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
             buyTokenAddress: _quoteAddr[1],
             spender: _quoteAddr[2],
             swapTarget: _quoteAddr[3],
-            swapCallData: _quoteData,
-            gas: _gas
+            swapCallData: _quoteData
         });
 
-        console.log('on initiate: ', msg.sender);
         ISoloMargin solo = ISoloMargin(_solo);
 
         // Get marketId from token address
@@ -126,17 +118,5 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         accountInfos[0] = _getAccountInfo();
 
         solo.operate(accountInfos, operations);
-    }
-    
-
-    function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
-        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
-        if (_returnData.length < 68) return 'Transaction reverted silently';
-
-        assembly {
-            // Slice the sighash.
-            _returnData := add(_returnData, 0x04)
-        }
-        return abi.decode(_returnData, (string)); // All that remains is the revert string
     }
 }
