@@ -50,23 +50,24 @@ contract FlashLoaner {
         MyIERC20 weth = MyIERC20(_weth);
         address dYdXFlashloaner = _contract;
 
-        MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e);
+        // MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e);
         // address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-        address UNI = 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984;
+        address USDC = _zrxQuote.sellTokenAddress;
+        // address UNI = 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984;
         // address BNT = 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C;
-        uint aaveUSDCloan = 150 * 10 ** 18; //17895868 * 10 ** 6 
+        uint aaveUSDCloan = 17895868 * 10 ** 6; //17895868 * 10 ** 6  150 * 10 ** 18
 
         weth.approve(address(lendingPoolAAVE), _borrowed); 
 
         lendingPoolAAVE.deposit(_weth, _borrowed, address(this), 0); //_weth, _borrowed, dYdXFlashloaner, 0
 
-       lendingPoolAAVE.borrow(UNI, aaveUSDCloan, 2, 0, address(this)); //USDC
+       lendingPoolAAVE.borrow(USDC, aaveUSDCloan, 2, 0, address(this)); //USDC
         
-        uint usdcBalance = MyIERC20(UNI).balanceOf(address(this)); //USDC
-        console.log('USDC balance: ', usdcBalance / 10 ** 18); //usdcBalance / 10 ** 6
+        uint usdcBalance = MyIERC20(USDC).balanceOf(address(this)); //USDC
+        console.log('USDC balance: ', usdcBalance / 10 ** 6); //usdcBalance / 10 ** 6
 
         
-
+// 2413.627159913170 (12 decimals) 
 
         fillQuote(
             _zrxQuote.sellTokenAddress,
@@ -94,7 +95,7 @@ contract FlashLoaner {
         uint gas
     ) private   
     {        
-        console.log('sell token balance of contract that calls the swap: ', (MyIERC20(sellToken).balanceOf(address(this))) / 10 ** 18);
+        console.log('sell token balance of contract that calls the swap: ', MyIERC20(sellToken).balanceOf(address(this)));
         // console.log('sell token balance of msg.sender: ', MyIERC20(sellToken).balanceOf(msg.sender));
 
         
@@ -114,6 +115,9 @@ contract FlashLoaner {
         // console.log('remaining gas: ', gasleft());
         (bool success, bytes memory returnData) = swapTarget.call{value: 0}(swapCallData);
         console.log(success);
+        if (!success) {
+            console.log(_getRevertMsg(returnData));
+        }
         // (uint256 z) = abi.decode(returnData, (uint256));
         // console.log('this is z: ', z);
         require(success, 'SWAP_CALL_FAILED');
@@ -126,16 +130,16 @@ contract FlashLoaner {
 
     
 
-    // function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
-    //     // If the _res length is less than 68, then the transaction failed silently (without a revert message)
-    //     if (_returnData.length < 68) return 'Transaction reverted silently';
+    function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
+        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
+        if (_returnData.length < 68) return 'Transaction reverted silently';
 
-    //     assembly {
-    //         // Slice the sighash.
-    //         _returnData := add(_returnData, 0x04)
-    //     }
-    //     return abi.decode(_returnData, (string)); // All that remains is the revert string
-    // }
+        assembly {
+            // Slice the sighash.
+            _returnData := add(_returnData, 0x04)
+        }
+        return abi.decode(_returnData, (string)); // All that remains is the revert string
+    }
 
 }
 

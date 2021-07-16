@@ -79,14 +79,14 @@ async function main() {
 
 /*****  0x quotes *********/
 
-  const sellAmount = 150 //parseUnits('150', 'gwei');
+  const sellAmount = 11184; //parseUnits('150', 'gwei');
   const qs = createQueryString({
-    sellToken: 'UNI',
+    sellToken: 'USDC',
     buyToken: 'BNT',
     sellAmount
-  });
+  }); 
   
-  const quoteUrl = `${API_QUOTE_URL}?${qs}`;
+  const quoteUrl = `${API_QUOTE_URL}?${qs}&slippagePercentage=0.5`;
   const response = await fetch(quoteUrl);
   const quote = await response.json();
 
@@ -99,7 +99,7 @@ async function main() {
     // quote.data //swapCallData
   ];
 
-  console.log('sellAmount: ', (quote.sellAmount / 10 ** 18).toFixed(20));
+  // console.log('sellAmount: ', (quote.sellAmount / 10 ** 18).toFixed(20));
   console.log('this is the quote: ', quote);
   console.log('value of the quote: ', quote.value);
   // console.log(formatEther(quote.buyAmount));
