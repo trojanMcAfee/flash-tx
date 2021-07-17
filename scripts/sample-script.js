@@ -61,6 +61,11 @@ async function main() {
 
 
 /*****  0x quotes *********/
+// let value2 = parseEther('1');
+// await signer.sendTransaction({
+//   value: value2,
+//   to: flashlogic.address
+// });
 
 
 

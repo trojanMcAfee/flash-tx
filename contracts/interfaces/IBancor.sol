@@ -12,7 +12,7 @@ interface IContractRegistry {
 
 interface IBancorNetwork {
     function convertByPath(
-        address[] memory _path, 
+        MyIERC20[] memory _path, 
         uint256 _amount, 
         uint256 _minReturn, 
         address _beneficiary, 
@@ -21,12 +21,12 @@ interface IBancorNetwork {
     ) external payable returns (uint256);
 
     function rateByPath(
-        address[] memory _path, 
+        MyIERC20[] memory _path, 
         uint256 _amount
     ) external view returns (uint256);
 
     function conversionPath(
         MyIERC20 _sourceToken, 
         MyIERC20 _targetToken
-    ) external view returns (address[] memory);
+    ) external view returns (MyIERC20[] memory);
 }

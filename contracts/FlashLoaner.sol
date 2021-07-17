@@ -30,20 +30,22 @@ contract FlashLoaner {
     uint public borrowed;
 
 
+    // receive() external payable {}
+
+
     function execute(address _weth, uint256 _borrowed, ZrxQuote calldata _zrxQuote) public {
         //AAVE
         MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
-        MyIERC20 weth = MyIERC20(_weth);
+        MyIERC20 IWETH = MyIERC20(_weth);
         address USDC = _zrxQuote.sellTokenAddress;
         MyIERC20 IUSDC = MyIERC20(USDC); 
         uint aaveUSDCloan = 17895868 * 10 ** 6;
-        address flashloaner = address(this);
 
-        weth.approve(address(lendingPoolAAVE), _borrowed); 
-        lendingPoolAAVE.deposit(_weth, _borrowed, flashloaner, 0); 
-       lendingPoolAAVE.borrow(USDC, aaveUSDCloan, 2, 0, flashloaner); 
+        IWETH.approve(address(lendingPoolAAVE), _borrowed); 
+        lendingPoolAAVE.deposit(_weth, _borrowed, address(this), 0); 
+       lendingPoolAAVE.borrow(USDC, aaveUSDCloan, 2, 0, address(this)); 
         
-        uint usdcBalance = IUSDC.balanceOf(flashloaner); 
+        uint usdcBalance = IUSDC.balanceOf(address(this)); 
         console.log('USDC balance (borrow AAVE): ', usdcBalance / 10 ** 6); 
 
         //0x
@@ -59,30 +61,16 @@ contract FlashLoaner {
         IContractRegistry ContractRegistry = IContractRegistry(0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4);
         MyIERC20 IBNT = MyIERC20(0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C);
         IBancorNetwork bancorNetwork = IBancorNetwork(ContractRegistry.addressOf('BancorNetwork'));
+        address bancorNetworkAddr = ContractRegistry.addressOf('BancorNetwork');
+        console.log('bancor network: ', bancorNetworkAddr);
 
-        address[] memory path = bancorNetwork.conversionPath(IUSDC, IBNT);
-        console.log('balance of USDC :', (IUSDC.balanceOf(address(this))) / 10 ** 6);
-        uint num = 883608 * 1 ether;
-        uint rate = bancorNetwork.rateByPath(path, num); //doing the swap of USDC for BNT
-        // IbancorNetwork.convertByPath()
-        console.log(rate / 1 ether);
-        
+        MyIERC20[] memory path = bancorNetwork.conversionPath(IUSDC, IBNT);
+        uint amount = 883608 * 10 ** 6; 
+        uint minReturn = bancorNetwork.rateByPath(path, amount); 
+        IUSDC.approve(bancorNetworkAddr, type(uint).max);
 
-        
-    //     function convertByPath(
-    //     address[] memory _path, 
-    //     uint256 _amount, 
-    //     uint256 _minReturn, 
-    //     address _beneficiary, 
-    //     address _affiliateAccount, 
-    //     uint256 _affiliateFee
-    // ) external payable returns (uint256);
-
-    // function rateByPath(
-    //     address[] memory _path, 
-    //     uint256 _amount
-    // ) external view returns (uint256);
-
+        bancorNetwork.convertByPath(path, amount, minReturn, address(this), address(0x0), 0);
+        console.log('BNT balance (swap Bancor): ', IBNT.balanceOf(address(this)) / 1 ether);
         
     }
     
@@ -102,7 +90,7 @@ contract FlashLoaner {
             console.log(Helpers._getRevertMsg(returnData));
         }
         require(success, 'SWAP_CALL_FAILED');
-        console.log('BNT balance after swap (swap 0x): ', MyIERC20(buyToken).balanceOf(address(this)) / 10 ** 12);
+        console.log('BNT balance after swap (0x): ', MyIERC20(buyToken).balanceOf(address(this)) / 10 ** 12);
     }
 }
 

@@ -55,7 +55,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         
         // TODO: Encode your logic here
         // E.g. arbitrage, liquidate accounts, etcx
-        console.log('WETH withdrawn (flashloan dYdX): ', (IERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 10 ** 18);
+        console.log('WETH withdrawn (flashloan dYdX): ', (IERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 1 ether);
         IERC20(mcd.token).transfer(logicContract, borrowed);
         executeCall(mcd.token, zrx); 
     }
