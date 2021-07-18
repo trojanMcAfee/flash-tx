@@ -56,8 +56,10 @@ contract FlashLoaner {
             _zrxQuote.swapTarget,
             _zrxQuote.swapCallData
         );   
+        console.log('USDC balance (borrow AAVE): ', IUSDC.balanceOf(address(this)) / 10 ** 6);
 
-        //BANCOR
+        //BANCOR 
+        //(USDC/BNT swap)
         IContractRegistry ContractRegistry = IContractRegistry(0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4);
         MyIERC20 IBNT = MyIERC20(0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C);
         IBancorNetwork bancorNetwork = IBancorNetwork(ContractRegistry.addressOf('BancorNetwork'));
@@ -71,6 +73,8 @@ contract FlashLoaner {
 
         bancorNetwork.convertByPath(path, amount, minReturn, address(this), address(0x0), 0);
         console.log('BNT balance (swap Bancor): ', IBNT.balanceOf(address(this)) / 1 ether);
+
+        //BNT 
         
     }
     
@@ -84,13 +88,12 @@ contract FlashLoaner {
     ) private   
     {        
         require(MyIERC20(sellToken).approve(spender, type(uint).max));
-   
         (bool success, bytes memory returnData) = swapTarget.call(swapCallData);
         if (!success) {
             console.log(Helpers._getRevertMsg(returnData));
         }
         require(success, 'SWAP_CALL_FAILED');
-        console.log('BNT balance after swap (0x): ', MyIERC20(buyToken).balanceOf(address(this)) / 10 ** 12);
+        console.log('BNT balance (swap 0x): ', MyIERC20(buyToken).balanceOf(address(this)) / 10 ** 18);
     }
 }
 

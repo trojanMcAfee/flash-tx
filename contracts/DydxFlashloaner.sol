@@ -33,6 +33,8 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         borrowed = _borrowed;
     }
 
+    // function() external payable {}
+
 
     // This is the function that will be called postLoan
     // i.e. Encode the logic to handle your flashloaned funds here

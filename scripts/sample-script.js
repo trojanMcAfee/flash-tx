@@ -1,6 +1,8 @@
 const { legos } = require("@studydefi/money-legos");
 // const uniRouterABI = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json').abi;
 const fetch = require("node-fetch");
+const bigInt = require("big-integer");
+
 
 const { createQueryString, API_QUOTE_URL } = require('./relayer.js');
 const { parseEther, parseUnits, formatEther } = ethers.utils;
@@ -40,27 +42,31 @@ async function main() {
 
 /*****  0x quotes *********/
 
-  const sellAmount = 11184; //parseUnits('150', 'gwei');
   const qs = createQueryString({
     sellToken: 'USDC',
     buyToken: 'BNT',
-    sellAmount
+    sellAmount: 11184 * 10 ** 6,
+    includedSources: 'Uniswap_V2'
   }); 
   
-  const quoteUrl = `${API_QUOTE_URL}?${qs}&slippagePercentage=0.5`;
+  const quoteUrl = `${API_QUOTE_URL}?${qs}&slippagePercentage=0.8`;
   const response = await fetch(quoteUrl);
   const quote = await response.json();
+
 
   // console.log('the quote: ', quote);
   const quoteAddr = [
     quote.sellTokenAddress,
     quote.buyTokenAddress,
     quote.allowanceTarget, 
-    quote.to 
+    quote.to
   ];
 
 
+
 /*****  0x quotes *********/
+
+
 // let value2 = parseEther('1');
 // await signer.sendTransaction({
 //   value: value2,
