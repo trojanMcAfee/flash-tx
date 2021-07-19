@@ -29,9 +29,4 @@ interface IBancorNetwork {
         MyIERC20 _sourceToken, 
         MyIERC20 _targetToken
     ) external view returns (MyIERC20[] memory);
-
-    function conversionPath2(
-        address _sourceToken, 
-        address _targetToken
-    ) external view returns (address[] memory);
 }
