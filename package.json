@@ -16,7 +16,6 @@
     "@studydefi/money-legos": "^2.4.2",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
-    "big-integer": "^1.6.48",
     "dotenv": "^10.0.0",
     "hardhat": "^2.4.1",
     "node-fetch": "^2.6.1"

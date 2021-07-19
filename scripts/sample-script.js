@@ -1,7 +1,6 @@
 const { legos } = require("@studydefi/money-legos");
 // const uniRouterABI = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json').abi;
 const fetch = require("node-fetch");
-const bigInt = require("big-integer");
 
 
 const { createQueryString, API_QUOTE_URL } = require('./relayer.js');
