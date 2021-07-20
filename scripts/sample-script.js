@@ -3,7 +3,7 @@ const { legos } = require("@studydefi/money-legos");
 const fetch = require("node-fetch");
 
 
-const { createQueryString, API_QUOTE_URL } = require('./relayer.js');
+const { createQueryString, API_QUOTE_URL, getQuote } = require('./relayer.js');
 const { parseEther, parseUnits, formatEther } = ethers.utils;
 // const { MaxUint256 } = ethers.constants;
 
@@ -41,25 +41,25 @@ async function main() {
 
 /*****  0x quotes *********/
 
-  const qs = createQueryString({
-    sellToken: 'USDC',
-    buyToken: 'BNT',
-    sellAmount: 11184 * 10 ** 6,
-    includedSources: 'Uniswap_V2'
-  }); 
+  // const qs = createQueryString({
+  //   sellToken: 'TUSD',
+  //   buyToken: 'WETH',
+  //   buyAmount: 224, //11184 * 10 ** 6
+  //   // includedSources: 'Uniswap_V2'
+  // }); 
   
-  const quoteUrl = `${API_QUOTE_URL}?${qs}&slippagePercentage=0.8`;
-  const response = await fetch(quoteUrl);
-  const quote = await response.json();
+  // const quoteUrl = `${API_QUOTE_URL}?${qs}&slippagePercentage=0.8`;
+  // const response = await fetch(quoteUrl);
+  // const quote = await response.json();
 
 
   // console.log('the quote: ', quote);
-  const quoteAddr = [
-    quote.sellTokenAddress,
-    quote.buyTokenAddress,
-    quote.allowanceTarget, 
-    quote.to
-  ];
+  // const quoteAddr = [
+  //   quote.sellTokenAddress,
+  //   quote.buyTokenAddress,
+  //   quote.allowanceTarget, 
+  //   quote.to
+  // ];
 
 
 
@@ -72,17 +72,33 @@ async function main() {
 //   to: flashlogic.address
 // });
 
+  const quotes_bytes_0x = [];
+  const quotes_addr_0x = [];
 
+  const USDCBNT_0x_quote = await getQuote('USDC', 'BNT', 11184 * 10 ** 6);
+  quotes_addr_0x[0] = USDCBNT_0x_quote.addresses;
+  quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes;
 
-
+  const TUSDWETH_0x_quote = await getQuote('TUSD', 'WETH', 882693);
+  quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses;
+  quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes;
+  // console.log(quotes_bytes_0x[0]);
    
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
     borrowed,
-    quoteAddr,
-    quote.data
+    quotes_addr_0x,
+    quotes_bytes_0x
   );
+
+  // await dxdxFlashloaner.initiateFlashLoan(
+  //   soloMarginAddr, 
+  //   wethAddr, 
+  //   borrowed,
+  //   quoteAddr,
+  //   quote.data
+  // );
 
 
 }

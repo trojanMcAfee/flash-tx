@@ -22,6 +22,19 @@ contract FlashLoaner {
         bytes swapCallData;
     }
 
+    // mapping(string => address) addresses;
+
+    // constructor() {
+    //     addresses['USDC'] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    //     addresses['BNT'] = 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C;
+    //     addresses['TUSD'] = 0x0000000000085d4780B73119b644AE5ecd22b376;
+    //     addresses['lendingPoolAAVE'] = 0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9;
+    //     addresses['ContractRegistry_Bancor'] = 0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4;
+    //     addresses['bancorNetwork'] = IContractRegistry(ContractRegistry_Bancor).addressOf('BancorNetwork');
+    //     addresses['ETH_Bancor'] = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    //     addresses['yPool'] = 0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51;
+    // } 
+
 
     address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address BNT = 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C;
@@ -31,12 +44,18 @@ contract FlashLoaner {
     address bancorNetwork = IContractRegistry(ContractRegistry_Bancor).addressOf('BancorNetwork');
     address ETH_Bancor = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address yPool = 0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51;
+    address sushiRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
 
 
     receive() external payable {}
 
+    // function _adr(string memory _name) internal view returns (address) {
+    //     return addresses[_name];
+    // }
 
-    function execute(address _weth, uint256 _borrowed, ZrxQuote calldata _zrxQuote) public {
+
+    //do the 0x swap of _TUSDWETH_0x_quote and see if the decimals is the problem
+    function execute(address _weth, uint256 _borrowed, ZrxQuote calldata _USDCBNT_0x_quote, ZrxQuote calldata _TUSDWETH_0x_quote) public {
         //General variables
         MyIERC20 IWETH = MyIERC20(_weth); 
         
@@ -52,12 +71,13 @@ contract FlashLoaner {
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
 
         //0x
+        //(USDC to BNT)
         fillQuote(
-            _zrxQuote.sellTokenAddress,
-            _zrxQuote.buyTokenAddress,
-            _zrxQuote.spender,
-            _zrxQuote.swapTarget,
-            _zrxQuote.swapCallData
+            _USDCBNT_0x_quote.sellTokenAddress,
+            _USDCBNT_0x_quote.buyTokenAddress,
+            _USDCBNT_0x_quote.spender,
+            _USDCBNT_0x_quote.swapTarget,
+            _USDCBNT_0x_quote.swapCallData
         );   
 
         //BANCOR 
@@ -90,16 +110,17 @@ contract FlashLoaner {
         console.log('7.- TUSD balance (Curve swap): ', MyIERC20(TUSD).balanceOf(address(this)) / 1 ether);
 
         //SUSHISWAP 
-        IUniswapV2Router02 sushiRouter = IUniswapV2Router02(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
-        MyIERC20(TUSD).approve(address(sushiRouter), type(uint).max);
+        MyIERC20(TUSD).approve(sushiRouter, type(uint).max);
         amount = 11173 * 1 ether;
         address[] memory _path = new address[](2);
         _path[0] = TUSD;
         _path[1] = _weth;
-        uint[] memory _amount = sushiRouter.swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
-        console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether);
+        uint[] memory _amount = IUniswapV2Router02(sushiRouter).swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
+        console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, ' - raw: ', _amount[1]);
 
-        //Ox
+        //0x
+        //(TUSDC to WETH)
+        
         
     }
     

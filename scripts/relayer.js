@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const { parseUnits } = ethers.utils;
+// const { parseUnits } = ethers.utils;
 const API_QUOTE_URL = 'https://api.0x.org/swap/v1/quote';
 
 
@@ -8,32 +8,36 @@ function createQueryString(params) {
 }
 
 
-// const sellAmount = parseUnits('11184.9175', 'gwei');
 
 
-//   const qs = createQueryString({
-//     sellToken: 'USDC',
-//     buyToken: 'BNT',
-//     sellAmount
-//   });
+  async function getQuote(_sellToken, _buyToken, _sellAmount) {
+    const qs = createQueryString({
+        sellToken: _sellToken,
+        buyToken: _buyToken,
+        sellAmount: _sellAmount,
+        includedSources: 'Uniswap_V2'
+    }); 
+    
+    const quoteUrl = `https://api.0x.org/swap/v1/quote?${qs}&slippagePercentage=0.8`;
+    const response = await fetch(quoteUrl);
+    const quote = await response.json();
+    
+    const addresses = [
+        quote.sellTokenAddress,
+        quote.buyTokenAddress,
+        quote.allowanceTarget, 
+        quote.to
+    ];
+    const bytes = quote.data;
 
-//   const quoteUrl = `${API_QUOTE_URL}?${qs}`;
-//   let quote;
-//   (async () => {
-//     const response = await fetch(quoteUrl);
-//     quote = await response.json();
-//   })();
-  
-//   console.log(quote);
-//   console.log(formatEther(quote.buyAmount));
-
-
-// module.exports = quote;
+    return { addresses, bytes };
+  }
 
 
 
 
 module.exports = {
     createQueryString,
-    API_QUOTE_URL
+    API_QUOTE_URL,
+    getQuote
 };
