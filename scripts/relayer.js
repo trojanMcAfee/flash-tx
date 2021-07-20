@@ -34,10 +34,36 @@ function createQueryString(params) {
   }
 
 
+  async function getQuote2(_sellToken, _buyToken, _sellAmount) {
+    const qs = createQueryString({
+        sellToken: _sellToken,
+        buyToken: _buyToken,
+        sellAmount: _sellAmount,
+        // includedSources: 'Uniswap_V2'
+    }); 
+    
+    const quoteUrl = `https://api.0x.org/swap/v1/quote?${qs}&slippagePercentage=0.8`;
+    const response = await fetch(quoteUrl);
+    const quote = await response.json();
+    console.log('the quote: ', quote);
+    
+    const addresses = [
+        quote.sellTokenAddress,
+        quote.buyTokenAddress,
+        quote.allowanceTarget, 
+        quote.to
+    ];
+    const bytes = quote.data;
+
+    return { addresses, bytes };
+  }
+
+
 
 
 module.exports = {
     createQueryString,
     API_QUOTE_URL,
-    getQuote
+    getQuote,
+    getQuote2
 };

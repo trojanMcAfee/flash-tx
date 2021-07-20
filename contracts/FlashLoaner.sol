@@ -117,11 +117,11 @@ contract FlashLoaner {
         _path[0] = TUSD;
         _path[1] = _weth;
         uint[] memory _amount = IUniswapV2Router02(sushiRouter).swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
-        console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, ' - raw: ', _amount[1]);
+        console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, '--', _amount[1]);
 
         //0x
         //(TUSD to WETH)
-        console.log('WETH balance before TUSD swap: ', IWETH.balanceOf(address(this)));
+        console.log('9. - WETH balance before TUSD swap: ', IWETH.balanceOf(address(this)) / 1 ether);
         fillQuote(
             _TUSDWETH_0x_quote.sellTokenAddress,
             _TUSDWETH_0x_quote.buyTokenAddress,
@@ -129,7 +129,7 @@ contract FlashLoaner {
             _TUSDWETH_0x_quote.swapTarget,
             _TUSDWETH_0x_quote.swapCallData
         );
-        console.log('WETH balance after TUSD swap: ', IWETH.balanceOf(address(this)));
+        console.log('9. - WETH balance after TUSD swap: ', IWETH.balanceOf(address(this)) / 1 ether);
         
     }
     
