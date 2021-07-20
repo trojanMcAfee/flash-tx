@@ -54,7 +54,7 @@ contract FlashLoaner {
     // }
 
 
-    //do the 0x swap of _TUSDWETH_0x_quote and see if the decimals is the problem
+    
     function execute(address _weth, uint256 _borrowed, ZrxQuote calldata _USDCBNT_0x_quote, ZrxQuote calldata _TUSDWETH_0x_quote) public {
         //General variables
         MyIERC20 IWETH = MyIERC20(_weth); 
@@ -79,6 +79,7 @@ contract FlashLoaner {
             _USDCBNT_0x_quote.swapTarget,
             _USDCBNT_0x_quote.swapCallData
         );   
+        console.log('4.- BNT balance (swap 0x): ', MyIERC20(BNT).balanceOf(address(this)) / 1 ether);
 
         //BANCOR 
         //(USDC to BNT swap)
@@ -119,8 +120,16 @@ contract FlashLoaner {
         console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, ' - raw: ', _amount[1]);
 
         //0x
-        //(TUSDC to WETH)
-        
+        //(TUSD to WETH)
+        console.log('WETH balance before TUSD swap: ', IWETH.balanceOf(address(this)));
+        fillQuote(
+            _TUSDWETH_0x_quote.sellTokenAddress,
+            _TUSDWETH_0x_quote.buyTokenAddress,
+            _TUSDWETH_0x_quote.spender,
+            _TUSDWETH_0x_quote.swapTarget,
+            _TUSDWETH_0x_quote.swapCallData
+        );
+        console.log('WETH balance after TUSD swap: ', IWETH.balanceOf(address(this)));
         
     }
     
@@ -140,7 +149,6 @@ contract FlashLoaner {
             console.log(Helpers._getRevertMsg(returnData));
         }
         require(success, 'SWAP_CALL_FAILED');
-        console.log('4.- BNT balance (swap 0x): ', MyIERC20(buyToken).balanceOf(address(this)) / 1 ether);
     }
 }
 

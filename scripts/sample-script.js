@@ -82,8 +82,8 @@ async function main() {
   const TUSDWETH_0x_quote = await getQuote('TUSD', 'WETH', 882693);
   quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses;
   quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes;
-  // console.log(quotes_bytes_0x[0]);
-   
+
+  
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
