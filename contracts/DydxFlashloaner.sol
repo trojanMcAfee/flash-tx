@@ -85,7 +85,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         if (!success) {
             console.log(Helpers._getRevertMsg(data));
         }
-        require(success, 'Delegate Call failed');
+        require(success, 'Call failed');
         return (0, '');
     }
 

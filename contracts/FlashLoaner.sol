@@ -8,6 +8,7 @@ import './interfaces/MyILendingPool.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/ICurve.sol';
 import './libraries/Helpers.sol';
+// import "@0x/contracts-exchange-libs/contracts/src/LibFillResults.sol";
 
 import "hardhat/console.sol";
 
@@ -119,9 +120,10 @@ contract FlashLoaner {
         uint[] memory _amount = IUniswapV2Router02(sushiRouter).swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
         console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, '--', _amount[1]);
 
+/******* issue  *********/
         //0x
         //(TUSD to WETH)
-        console.log('9. - WETH balance before TUSD swap: ', IWETH.balanceOf(address(this)) / 1 ether);
+        console.log('9. - WETH balance before TUSD swap: ', IWETH.balanceOf(address(this)));
         fillQuote(
             _TUSDWETH_0x_quote.sellTokenAddress,
             _TUSDWETH_0x_quote.buyTokenAddress,
@@ -129,10 +131,11 @@ contract FlashLoaner {
             _TUSDWETH_0x_quote.swapTarget,
             _TUSDWETH_0x_quote.swapCallData
         );
+        console.log('9. - WETH balance after TUSD swap without 1 ether: ', IWETH.balanceOf(address(this)));
         console.log('9. - WETH balance after TUSD swap: ', IWETH.balanceOf(address(this)) / 1 ether);
         
     }
-    
+/****** issue  *********/  
     
 
     function fillQuote(
@@ -145,6 +148,8 @@ contract FlashLoaner {
     {        
         require(MyIERC20(sellToken).approve(spender, type(uint).max));
         (bool success, bytes memory returnData) = swapTarget.call(swapCallData);
+        // fillResults = abi.decode(returnData, (LibFillResults.FillResults));
+        // console.log('the: ', fillResults);
         if (!success) {
             console.log(Helpers._getRevertMsg(returnData));
         }

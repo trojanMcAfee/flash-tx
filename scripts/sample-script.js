@@ -15,6 +15,7 @@ let value;
 
 
 async function main() {
+  const provider = hre.ethers.provider;
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
   console.log('Deployers address: ', signerAddr);
@@ -45,7 +46,7 @@ async function main() {
   //   sellToken: 'TUSD',
   //   buyToken: 'WETH',
   //   sellAmount: BigInt(882693 * 10 ** 18), //11184 * 10 ** 6
-  //   includedSources: 'Uniswap_V2'
+  //   // includedSources: 'Uniswap_V2'
   // }); 
   
   // const quoteUrl = `${API_QUOTE_URL}?${qs}&slippagePercentage=0.8`;
@@ -72,18 +73,23 @@ async function main() {
 //   to: flashlogic.address
 // });
 
+
+
   const quotes_bytes_0x = [];
   const quotes_addr_0x = [];
 
   const USDCBNT_0x_quote = await getQuote('USDC', 'BNT', 11184 * 10 ** 6);
   quotes_addr_0x[0] = USDCBNT_0x_quote.addresses;
-  quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes;
+  quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes; //problem: with one order, it works but wrong amount. With two orders (what i need), it reverts
 
-  const TUSDWETH_0x_quote = await getQuote2('TUSD', 'WETH', BigInt(882693 * 10 ** 18));
-  quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses;
-  quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes;
+/***** issue ******/
 
+  const TUSDWETH_0x_quote = await getQuote2('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); //when using 882693 works but wrong amount
+  quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses; //882693 * 10 ** 18 throws error on  quote
+  quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes; //BigInt(882693 * 10 ** 18) gives quote but reverts on swap...works with BigInt(882693 * 10 ** 12) but wrong amount
+                                                //if i include a source, quotes give one order and it works...it doesn't work with two orders (what I need)
   
+/****** issue  ******/                                             
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
