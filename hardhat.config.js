@@ -24,6 +24,9 @@ module.exports = {
         blockNumber: 12431519
       }
     },
+    mainnet: {
+      url: 'https://mainnet.infura.io/v3/ead605dd65704007ae941fffb7c1d1a7'
+    }
   }
 };
 

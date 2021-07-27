@@ -40,12 +40,15 @@ contract FlashLoaner {
     address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address BNT = 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C;
     address TUSD = 0x0000000000085d4780B73119b644AE5ecd22b376;
+    address WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address lendingPoolAAVE = 0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9;
     address ContractRegistry_Bancor = 0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4;
     address bancorNetwork = IContractRegistry(ContractRegistry_Bancor).addressOf('BancorNetwork');
     address ETH_Bancor = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address yPool = 0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51;
     address sushiRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+    address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    // address USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
 
 
     receive() external payable {}
@@ -54,9 +57,24 @@ contract FlashLoaner {
     //     return addresses[_name];
     // }
 
+    // event execute_TUSDWETH_0x_Swap(bool execute);
 
-    
-    function execute(address _weth, uint256 _borrowed, ZrxQuote calldata _USDCBNT_0x_quote, ZrxQuote calldata _TUSDWETH_0x_quote) public {
+    function _createPath(address _token1, address _token2) private pure returns(address[] memory) {
+        address[] memory path = new address[](2);
+        path[0] = _token1;
+        path[1] = _token2;
+        return path;
+    }
+
+
+
+    function execute(
+        address _weth, 
+        uint256 _borrowed, 
+        ZrxQuote calldata _USDCBNT_0x_quote, 
+        ZrxQuote calldata _TUSDWETH_0x_quote,
+        ZrxQuote calldata _USDCWBTC_0x_quote
+    ) public {
         //General variables
         MyIERC20 IWETH = MyIERC20(_weth); 
         
@@ -114,16 +132,21 @@ contract FlashLoaner {
         //SUSHISWAP 
         MyIERC20(TUSD).approve(sushiRouter, type(uint).max);
         amount = 11173 * 1 ether;
-        address[] memory _path = new address[](2);
-        _path[0] = TUSD;
-        _path[1] = _weth;
-        uint[] memory _amount = IUniswapV2Router02(sushiRouter).swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
+        address[] memory _path;
+        _path = _createPath(TUSD, _weth);
+        // address[] memory _path = new address[](2);
+        // _path[0] = TUSD;
+        // _path[1] = _weth;
+        uint[] memory _amount;
+        _amount = IUniswapV2Router02(sushiRouter).swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
         console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, '--', _amount[1]);
 
-/******* issue  *********/
         //0x
         //(TUSD to WETH)
         console.log('9. - WETH balance before TUSD swap: ', IWETH.balanceOf(address(this)));
+
+        // emit execute_TUSDWETH_0x_Swap(true);
+
         fillQuote(
             _TUSDWETH_0x_quote.sellTokenAddress,
             _TUSDWETH_0x_quote.buyTokenAddress,
@@ -133,9 +156,27 @@ contract FlashLoaner {
         );
         console.log('9. - WETH balance after TUSD swap without 1 ether: ', IWETH.balanceOf(address(this)));
         console.log('9. - WETH balance after TUSD swap: ', IWETH.balanceOf(address(this)) / 1 ether);
+
         
+        //UNISWAP
+        MyIERC20(USDC).approve(uniswapRouter, type(uint).max);
+        amount = 44739 * 10 ** 6;
+        _path = _createPath(USDC, WBTC);
+        _amount = IUniswapV2Router02(uniswapRouter).swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
+        console.log('10.- WBTC balance after Uniswap swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
+
+        //0x
+        //(USDC to WBTC)
+        fillQuote(
+            _USDCWBTC_0x_quote.sellTokenAddress,
+            _USDCWBTC_0x_quote.buyTokenAddress,
+            _USDCWBTC_0x_quote.spender,
+            _USDCWBTC_0x_quote.swapTarget,
+            _USDCWBTC_0x_quote.swapCallData
+        );   
+        console.log('11.- WBTC balance after 0x swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8);
+
     }
-/****** issue  *********/  
     
 
     function fillQuote(
@@ -144,12 +185,10 @@ contract FlashLoaner {
         address spender,
         address swapTarget,
         bytes calldata swapCallData
-    ) private   
+    ) public   
     {        
         require(MyIERC20(sellToken).approve(spender, type(uint).max));
         (bool success, bytes memory returnData) = swapTarget.call(swapCallData);
-        // fillResults = abi.decode(returnData, (LibFillResults.FillResults));
-        // console.log('the: ', fillResults);
         if (!success) {
             console.log(Helpers._getRevertMsg(returnData));
         }

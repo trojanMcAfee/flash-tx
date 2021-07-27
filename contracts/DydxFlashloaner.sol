@@ -35,6 +35,23 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
 
     // function() external payable {}
 
+    function _getZrxQuote(
+        address[4][] memory _quotesAddr, 
+        bytes[] memory _bytes,
+        uint _index
+    ) private returns(ZrxQuote memory) 
+    {
+        ZrxQuote memory zrxQuote = ZrxQuote({
+            sellTokenAddress: _quotesAddr[_index][0],
+            buyTokenAddress: _quotesAddr[_index][1],
+            spender: _quotesAddr[_index][2],
+            swapTarget: _quotesAddr[_index][3],
+            swapCallData: _bytes[_index]
+        });
+
+        return zrxQuote;
+    }
+
 
     // This is the function that will be called postLoan
     // i.e. Encode the logic to handle your flashloaned funds here
@@ -46,10 +63,11 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         (
             MyCustomData memory mcd, 
             ZrxQuote memory USDCBNT_0x_quote,  
-            ZrxQuote memory TUSDWETH_0x_quote
+            ZrxQuote memory TUSDWETH_0x_quote,
+            ZrxQuote memory USDCWBTC_0x_quote
         ) = abi.decode(
             data, 
-            (MyCustomData, ZrxQuote, ZrxQuote)
+            (MyCustomData, ZrxQuote, ZrxQuote, ZrxQuote)
         );
         uint256 balOfLoanedToken = IERC20(mcd.token).balanceOf(address(this));
         
@@ -66,20 +84,21 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         // E.g. arbitrage, liquidate accounts, etcx
         console.log('1.- Borrow WETH from dYdX (flashloan): ', (IERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 1 ether);
         IERC20(mcd.token).transfer(logicContract, borrowed);
-        executeCall(mcd.token, USDCBNT_0x_quote, TUSDWETH_0x_quote); 
+        executeCall(mcd.token, USDCBNT_0x_quote, TUSDWETH_0x_quote, USDCWBTC_0x_quote); 
     }
 
 
     function executeCall(
         address _weth, 
         ZrxQuote memory _USDCBNT_0x_quote, 
-        ZrxQuote memory _TUSDWETH_0x_quote
+        ZrxQuote memory _TUSDWETH_0x_quote,
+        ZrxQuote memory _USDCWBTC_0x_quote
         ) private returns(uint, string memory) {
 
         (bool success, bytes memory data) = logicContract.call(
                 abi.encodeWithSignature(
-                    'execute(address,uint256,(address,address,address,address,bytes),(address,address,address,address,bytes))',
-                     _weth, borrowed, _USDCBNT_0x_quote, _TUSDWETH_0x_quote
+                    'execute(address,uint256,(address,address,address,address,bytes),(address,address,address,address,bytes),(address,address,address,address,bytes))',
+                     _weth, borrowed, _USDCBNT_0x_quote, _TUSDWETH_0x_quote, _USDCWBTC_0x_quote
                 )
         );
         if (!success) {
@@ -90,29 +109,32 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
     }
 
 
+
     function initiateFlashLoan(
         address _solo, 
         address _token, 
         uint256 _amount, 
-        address[4][] calldata quotes_addr_0x,
-        bytes[] calldata quotes_bytes_0x
-    ) external
+        address[4][] memory quotes_addr_0x,
+        bytes[] memory quotes_bytes_0x
+    ) public
     {
-        ZrxQuote memory USDCBNT_0x_quote = ZrxQuote({
-            sellTokenAddress: quotes_addr_0x[0][0],
-            buyTokenAddress: quotes_addr_0x[0][1],
-            spender: quotes_addr_0x[0][2],
-            swapTarget: quotes_addr_0x[0][3],
-            swapCallData: quotes_bytes_0x[0]
-        });
+        ZrxQuote memory USDCBNT_0x_quote = _getZrxQuote(
+            quotes_addr_0x,
+            quotes_bytes_0x,
+            0
+        );        
 
-        ZrxQuote memory TUSDWETH_0x_quote = ZrxQuote({
-            sellTokenAddress: quotes_addr_0x[1][0],
-            buyTokenAddress: quotes_addr_0x[1][1],
-            spender: quotes_addr_0x[1][2],
-            swapTarget: quotes_addr_0x[1][3],
-            swapCallData: quotes_bytes_0x[1]
-        });
+        ZrxQuote memory TUSDWETH_0x_quote = _getZrxQuote(
+            quotes_addr_0x,
+            quotes_bytes_0x,
+            1
+        );
+
+        ZrxQuote memory USDCWBTC_0x_quote = _getZrxQuote(
+            quotes_addr_0x,
+            quotes_bytes_0x,
+            2
+        );
 
         
 
@@ -137,7 +159,8 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
             abi.encode(
                 MyCustomData({token: _token, repayAmount: repayAmount}), 
                 USDCBNT_0x_quote, 
-                TUSDWETH_0x_quote
+                TUSDWETH_0x_quote,
+                USDCWBTC_0x_quote
             )
         );
         operations[2] = _getDepositAction(marketId, repayAmount);

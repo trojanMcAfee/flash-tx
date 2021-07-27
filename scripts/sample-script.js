@@ -19,6 +19,7 @@ async function main() {
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
   console.log('Deployers address: ', signerAddr);
+
   
   //Deploys the logic contract
   const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
@@ -34,11 +35,16 @@ async function main() {
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
   const IWeth = await hre.ethers.getContractAt('IWETH', wethAddr);
-  value = parseUnits('2', "gwei"); 
+  value = parseUnits('2', "gwei"); //gwei
   await IWeth.deposit({ value });
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
+  /**** Sending 72 ETH while I solve the 0x problem ****/
+  value = parseUnits('73', "ether"); //gwei
+  await IWeth.deposit({ value });
+  await IWeth.transfer(flashlogic.address, value);
 
+  
 
 /*****  0x quotes *********/
 
@@ -82,14 +88,16 @@ async function main() {
   quotes_addr_0x[0] = USDCBNT_0x_quote.addresses;
   quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes; //problem: with one order, it works but wrong amount. With two orders (what i need), it reverts
 
-/***** issue ******/
 
-  const TUSDWETH_0x_quote = await getQuote2('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); //when using 882693 works but wrong amount
+  const TUSDWETH_0x_quote = await getQuote('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); //when using 882693 works but wrong amount
   quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses; //882693 * 10 ** 18 throws error on  quote
   quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes; //BigInt(882693 * 10 ** 18) gives quote but reverts on swap...works with BigInt(882693 * 10 ** 12) but wrong amount
                                                 //if i include a source, quotes give one order and it works...it doesn't work with two orders (what I need)
   
-/****** issue  ******/                                             
+  const USDCWBTC_0x_quote = await getQuote2('USDC', 'WBTC', 984272 * 10 ** 6);                                     
+  quotes_addr_0x[2] = USDCWBTC_0x_quote.addresses;
+  quotes_bytes_0x[2] = USDCWBTC_0x_quote.bytes;
+                                        
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
@@ -97,6 +105,7 @@ async function main() {
     quotes_addr_0x,
     quotes_bytes_0x
   );
+
 
   // await dxdxFlashloaner.initiateFlashLoan(
   //   soloMarginAddr, 
