@@ -145,8 +145,12 @@ contract FlashLoaner {
         //(TUSD to WETH)
         console.log('9. - WETH balance before TUSD swap: ', IWETH.balanceOf(address(this)));
 
-        // emit execute_TUSDWETH_0x_Swap(true);
+        // (uint256 gas) = abi.decode(_TUSDWETH_0x_quote.swapCallData, (uint256));
+        // console.log('hi');
+        // console.log('chainId: ', gas);
 
+
+        // console.log('gas left: ', gasleft());
         fillQuote(
             _TUSDWETH_0x_quote.sellTokenAddress,
             _TUSDWETH_0x_quote.buyTokenAddress,
@@ -159,22 +163,22 @@ contract FlashLoaner {
 
         
         //UNISWAP
-        MyIERC20(USDC).approve(uniswapRouter, type(uint).max);
-        amount = 44739 * 10 ** 6;
-        _path = _createPath(USDC, WBTC);
-        _amount = IUniswapV2Router02(uniswapRouter).swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
-        console.log('10.- WBTC balance after Uniswap swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
+        // MyIERC20(USDC).approve(uniswapRouter, type(uint).max);
+        // amount = 44739 * 10 ** 6;
+        // _path = _createPath(USDC, WBTC);
+        // _amount = IUniswapV2Router02(uniswapRouter).swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
+        // console.log('10.- WBTC balance after Uniswap swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
 
-        //0x
-        //(USDC to WBTC)
-        fillQuote(
-            _USDCWBTC_0x_quote.sellTokenAddress,
-            _USDCWBTC_0x_quote.buyTokenAddress,
-            _USDCWBTC_0x_quote.spender,
-            _USDCWBTC_0x_quote.swapTarget,
-            _USDCWBTC_0x_quote.swapCallData
-        );   
-        console.log('11.- WBTC balance after 0x swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8);
+        // //0x
+        // //(USDC to WBTC)
+        // fillQuote(
+        //     _USDCWBTC_0x_quote.sellTokenAddress,
+        //     _USDCWBTC_0x_quote.buyTokenAddress,
+        //     _USDCWBTC_0x_quote.spender,
+        //     _USDCWBTC_0x_quote.swapTarget,
+        //     _USDCWBTC_0x_quote.swapCallData
+        // );   
+        // console.log('11.- WBTC balance after 0x swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8);
 
     }
     

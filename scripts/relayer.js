@@ -32,16 +32,18 @@ function createQueryString(params) {
 
     return { addresses, bytes };
   }
+  
 
   async function getQuote2(_sellToken, _buyToken, _sellAmount) {
     const qs = createQueryString({
         sellToken: _sellToken,
         buyToken: _buyToken,
         sellAmount: _sellAmount,
-        // includedSources: 'Uniswap_V2'
+        gas: 1500000,
+        excludedSources: 'Uniswap_V3'
     }); 
     
-    const quoteUrl = `https://api.0x.org/swap/v1/quote?${qs}&slippagePercentage=0.8`;
+    const quoteUrl = `https://api.0x.org/swap/v1/quote?${qs}&slippagePercentage=0.8&skipValidation=true`;
     // const quoteUrl = 'https://api.0x.org/sra/v4/orders?perPage=1000&makerToken=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
     // const quoteUrl = 'https://api.0x.org/sra/v3/orders?perPage=1000&page=1&makerAssetData=0xf47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2&takerAssetData=0xf47261b00000000000000000000000000000000000085d4780b73119b644ae5ecd22b376';
     // const quoteUrl = 'http://sra-spec.s3-website-us-east-1.amazonaws.com/v2/asset_pairs';
@@ -95,9 +97,12 @@ function createQueryString(params) {
 
 
 
+
+
 module.exports = {
     createQueryString,
     API_QUOTE_URL,
     getQuote,
-    getQuote2
+    getQuote2,
+    
 };
