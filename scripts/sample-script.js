@@ -13,6 +13,30 @@ const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const borrowed = parseEther('6478');
 let value;
 
+const addrNames = [
+  'USDC',
+  'BNT',
+  'TUSD',
+  'lendingPoolAAVE',
+  'ContractRegistry_Bancor',
+  'ETH_Bancor',
+  'yPool',
+  'sushiRouter',
+  'uniswapRouter'
+];
+
+const addresses = [
+  '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
+  '0x0000000000085d4780B73119b644AE5ecd22b376',
+  '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
+  '0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4',
+  '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  '0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51',
+  '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
+  '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+];
+
 
 async function main() {
   const provider = hre.ethers.provider;
@@ -20,18 +44,41 @@ async function main() {
   const signerAddr = await signer.getAddress();
   console.log('Deployers address: ', signerAddr);
 
+  //Deploy the Helpers library
+  const Helpers = await hre.ethers.getContractFactory('Helpers');
+  const helpers = await Helpers.deploy();
+  await helpers.deployed();
+  console.log('Helpers deployed to: ', helpers.address);
+
+  //Deploys the Swaper0x contract
+  const Swaper0x = await hre.ethers.getContractFactory('Swaper0x');
+  const swaper0x = await Swaper0x.deploy();
+  await swaper0x.deployed();
+  console.log('Swaper0x deployed to: ', swaper0x.address);
   
+  //Deploys the 2nd part of the logic contract first
+  const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash');
+  const revengeOfTheFlash = await RevengeOfTheFlash.deploy();
+  await revengeOfTheFlash.deployed();
+  console.log('Revenge-Of-The-Flash deployed to: ', revengeOfTheFlash.address);
+
   //Deploys the logic contract
-  const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
-  const flashlogic = await FlashLoaner.deploy();
+  const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner', {
+    libraries: {
+      Helpers: helpers.address
+    }
+  });
+  const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address, addrNames, addresses);
   await flashlogic.deployed();
   console.log('flashlogic deployed to: ', flashlogic.address);
+
   
   //Deploys the proxy where the loan is requested
   const DydxFlashloaner = await hre.ethers.getContractFactory("DydxFlashloaner");
   const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
   await dxdxFlashloaner.deployed();
   console.log("dYdX_flashloaner deployed to:", dxdxFlashloaner.address);
+
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
   const IWeth = await hre.ethers.getContractAt('IWETH', wethAddr);
@@ -40,9 +87,9 @@ async function main() {
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
   /**** Sending 72 ETH while I solve the 0x problem ****/
-  value = parseUnits('73', "ether"); //gwei
-  await IWeth.deposit({ value });
-  await IWeth.transfer(flashlogic.address, value);
+  // value = parseUnits('73', "ether"); //gwei
+  // await IWeth.deposit({ value });
+  // await IWeth.transfer(flashlogic.address, value);
 
   
 

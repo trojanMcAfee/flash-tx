@@ -15,6 +15,14 @@ library Helpers {
         return abi.decode(_returnData, (string)); // All that remains is the revert string
     }
 
+
+    function _createPath(address _token1, address _token2) public pure returns(address[] memory) {
+        address[] memory path = new address[](2);
+        path[0] = _token1;
+        path[1] = _token2;
+        return path;
+    }
+
     // function _toAsciiString(address x) internal pure returns (string memory) {
     //     bytes memory s = new bytes(40);
     //     for (uint i = 0; i < 20; i++) {
