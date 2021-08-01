@@ -10,6 +10,19 @@ import 'hardhat/console.sol';
 
 contract Swaper0x {
 
+    struct ZrxQuote {
+        address sellTokenAddress;
+        address buyTokenAddress;
+        address spender;
+        address swapTarget;
+        bytes swapCallData;
+    }
+
+    mapping(string => address) addresses;
+
+    address swaper0x;
+    address revengeOfTheFlash;
+
 
     function fillQuote(
         address sellToken,
@@ -28,9 +41,7 @@ contract Swaper0x {
     }
 
 
-    function getHello(uint256 num) external view {
-        console.log(num);
-    }
+
    
 
 

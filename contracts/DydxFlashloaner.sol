@@ -84,12 +84,12 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         // E.g. arbitrage, liquidate accounts, etcx
         console.log('1.- Borrow WETH from dYdX (flashloan): ', (IERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 1 ether);
         IERC20(mcd.token).transfer(logicContract, borrowed);
-        executeCall(mcd.token, USDCBNT_0x_quote, TUSDWETH_0x_quote, USDCWBTC_0x_quote); 
+        executeCall(USDCBNT_0x_quote, TUSDWETH_0x_quote, USDCWBTC_0x_quote); 
     }
 
 
     function executeCall(
-        address _weth, 
+        // address _weth, 
         ZrxQuote memory _USDCBNT_0x_quote, 
         ZrxQuote memory _TUSDWETH_0x_quote,
         ZrxQuote memory _USDCWBTC_0x_quote
@@ -97,8 +97,8 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
 
         (bool success, bytes memory data) = logicContract.call(
                 abi.encodeWithSignature(
-                    'execute(address,uint256,(address,address,address,address,bytes),(address,address,address,address,bytes),(address,address,address,address,bytes))',
-                     _weth, borrowed, _USDCBNT_0x_quote, _TUSDWETH_0x_quote, _USDCWBTC_0x_quote
+                    'execute(uint256,(address,address,address,address,bytes),(address,address,address,address,bytes),(address,address,address,address,bytes))',
+                     borrowed, _USDCBNT_0x_quote, _TUSDWETH_0x_quote, _USDCWBTC_0x_quote
                 )
         );
         if (!success) {

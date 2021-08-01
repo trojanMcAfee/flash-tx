@@ -22,11 +22,12 @@ contract FlashLoaner {
         bytes swapCallData;
     }
 
-    mapping(string => address) addresses;
 
+    mapping(string => address) addresses;
 
     address swaper0x;
     address revengeOfTheFlash;
+
 
     constructor(
         address _swaper0x, 
@@ -55,7 +56,7 @@ contract FlashLoaner {
 
 
     function execute(
-        address _weth, 
+        // address _weth, 
         uint256 _borrowed, 
         ZrxQuote calldata _USDCBNT_0x_quote, 
         ZrxQuote calldata _TUSDWETH_0x_quote,
@@ -65,8 +66,8 @@ contract FlashLoaner {
 
         //AAVE
         uint aaveUSDCloan = 17895868 * 10 ** 6;
-        MyIERC20(_weth).approve(_adr('lendingPoolAAVE'), _borrowed); 
-        MyILendingPool(_adr('lendingPoolAAVE')).deposit(_weth, _borrowed, address(this), 0); 
+        MyIERC20(_adr('WETH')).approve(_adr('lendingPoolAAVE'), _borrowed); 
+        MyILendingPool(_adr('lendingPoolAAVE')).deposit(_adr('WETH'), _borrowed, address(this), 0); 
         console.log('2.- Deposit WETH to Aave: ', _borrowed / 1 ether);
         MyILendingPool(_adr('lendingPoolAAVE')).borrow(_adr('USDC'), aaveUSDCloan, 2, 0, address(this)); 
         
@@ -113,11 +114,11 @@ contract FlashLoaner {
         ICurve(_adr('yPool')).exchange_underlying(1, 3, amount, 1);
         console.log('7.- TUSD balance (Curve swap): ', MyIERC20(_adr('TUSD')).balanceOf(address(this)) / 1 ether);
 
-        //SUSHISWAP 
+        // //SUSHISWAP 
         MyIERC20(_adr('TUSD')).approve(_adr('sushiRouter'), type(uint).max);
         amount = 11173 * 1 ether;
         address[] memory _path;
-        _path = Helpers._createPath(_adr('TUSD'), _weth);
+        _path = Helpers._createPath(_adr('TUSD'), _adr('WETH'));
         uint[] memory _amount;
         _amount = IUniswapV2Router02(_adr('sushiRouter')).swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
         console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, '--', _amount[1]);
@@ -126,11 +127,22 @@ contract FlashLoaner {
         // //(TUSD to WETH)
         // console.log('9. - WETH balance before TUSD swap: ', MyIERC20(_weth).balanceOf(address(this)));
 
+    
+        // ParamsForRevenge memory params = ParamsForRevenge({
+        //     // oneInch: addresses['1Inch'],
+        //     TUSD: _adr('TUSD'),
+        //     WETH: _weth
+        // });
 
-        // (bool success, bytes memory data) = revengeOfTheFlash.call(
-        //     abi.encodeWithSignature('executeCont(address,(address,address,address,address,bytes))', _weth, _TUSDWETH_0x_quote)
-        // );
-        // console.log('success: ', success);
+        (bool success, bytes memory data) = revengeOfTheFlash.delegatecall(
+            abi.encodeWithSignature('executeCont((address,address,address,address,bytes))',
+             _TUSDWETH_0x_quote
+            )
+        );
+        if (!success) {
+            console.log(Helpers._getRevertMsg(data));
+        }
+        require(success, 'Delegatecall to Revenge of The Flash failed');
 
 
 
@@ -148,14 +160,14 @@ contract FlashLoaner {
 
         // console.log('gas left: ', gasleft());
         // fillQuote(
-            // _TUSDWETH_0x_quote.sellTokenAddress,
-            // _TUSDWETH_0x_quote.buyTokenAddress,
-            // _TUSDWETH_0x_quote.spender,
-            // _TUSDWETH_0x_quote.swapTarget,
-            // _TUSDWETH_0x_quote.swapCallData
+        //     _TUSDWETH_0x_quote.sellTokenAddress,
+        //     _TUSDWETH_0x_quote.buyTokenAddress,
+        //     _TUSDWETH_0x_quote.spender,
+        //     _TUSDWETH_0x_quote.swapTarget,
+        //     _TUSDWETH_0x_quote.swapCallData
         // );
-        // console.log('9. - WETH balance after TUSD swap without 1 ether: ', IWETH.balanceOf(address(this)));
-        // console.log('9. - WETH balance after TUSD swap: ', IWETH.balanceOf(address(this)) / 1 ether);
+        // console.log('9. - WETH balance after TUSD swap without 1 ether: ', MyIERC20(_weth).balanceOf(address(this)));
+        // console.log('9. - WETH balance after TUSD swap: ', MyIERC20(_weth).balanceOf(address(this)) / 1 ether);
 
         
         //UNISWAP
@@ -199,82 +211,7 @@ contract FlashLoaner {
 }
 
 
-// abstract contract RevengeOfTheFlash is FlashLoaner {
 
-//     function _createPath(address _token1, address _token2) public pure override returns(address[] memory) {
-//         address[] memory path = new address[](2);
-//         path[0] = _token1;
-//         path[1] = _token2;
-//         return path;
-//     }
-
-
-//     function executeCont(address _weth, ZrxQuote calldata _TUSDWETH_0x_quote) public {
-//         uint amount;
-//         address[] memory _path;
-//         // MyIERC20 IWETH = MyIERC20(_weth);
-
-//     //SUSHISWAP 
-//         MyIERC20(TUSD).approve(sushiRouter, type(uint).max);
-//         amount = 11173 * 1 ether;
-//         _path = _createPath(TUSD, _weth);
-//         // address[] memory _path = new address[](2);
-//         // _path[0] = TUSD;
-//         // _path[1] = _weth;
-//         uint[] memory _amount;
-//         _amount = IUniswapV2Router02(sushiRouter).swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
-//         console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, '--', _amount[1]);
-
-//         //0x
-//         //(TUSD to WETH)
-//         console.log('9. - WETH balance before TUSD swap: ', MyIERC20(_weth).balanceOf(address(this)));
-
-
-//         (bool success, bytes memory data) = swaper0x.call{gas: 1000000}(
-//             abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
-//                 _TUSDWETH_0x_quote.sellTokenAddress,
-//                 _TUSDWETH_0x_quote.buyTokenAddress,
-//                 _TUSDWETH_0x_quote.spender,
-//                 _TUSDWETH_0x_quote.swapTarget,
-//                 _TUSDWETH_0x_quote.swapCallData  
-//             )
-//         );
-//         console.log('success: ', success);
-
-
-//         // console.log('gas left: ', gasleft());
-//         // fillQuote(
-//             // _TUSDWETH_0x_quote.sellTokenAddress,
-//             // _TUSDWETH_0x_quote.buyTokenAddress,
-//             // _TUSDWETH_0x_quote.spender,
-//             // _TUSDWETH_0x_quote.swapTarget,
-//             // _TUSDWETH_0x_quote.swapCallData
-//         // );
-//         // console.log('9. - WETH balance after TUSD swap without 1 ether: ', IWETH.balanceOf(address(this)));
-//         // console.log('9. - WETH balance after TUSD swap: ', IWETH.balanceOf(address(this)) / 1 ether);
-
-        
-//         //UNISWAP
-//         // MyIERC20(USDC).approve(uniswapRouter, type(uint).max);
-//         // amount = 44739 * 10 ** 6;
-//         // _path = _createPath(USDC, WBTC);
-//         // _amount = IUniswapV2Router02(uniswapRouter).swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
-//         // console.log('10.- WBTC balance after Uniswap swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
-
-//         // //0x
-//         // //(USDC to WBTC)
-//         // fillQuote(
-//         //     _USDCWBTC_0x_quote.sellTokenAddress,
-//         //     _USDCWBTC_0x_quote.buyTokenAddress,
-//         //     _USDCWBTC_0x_quote.spender,
-//         //     _USDCWBTC_0x_quote.swapTarget,
-//         //     _USDCWBTC_0x_quote.swapCallData
-//         // );   
-//         // console.log('11.- WBTC balance after 0x swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8);
-
-//     }
-
-// }
 
 
 

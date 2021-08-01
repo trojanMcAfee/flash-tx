@@ -39,7 +39,7 @@ function createQueryString(params) {
         sellToken: _sellToken,
         buyToken: _buyToken,
         sellAmount: _sellAmount,
-        // excludedSources: 'Uniswap_V3'
+        includedSources: 'Uniswap_V2' 
     }); 
     
     const quoteUrl = `https://api.0x.org/swap/v1/quote?${qs}&slippagePercentage=0.8&skipValidation=true`;
@@ -59,7 +59,7 @@ function createQueryString(params) {
 
 
     // console.log('the signatures: ', signatures);
-    // console.log('the quote: ', quote);
+    console.log('the quote: ', quote);
     // console.log('fillData: ', quote.orders[0].fillData);
     // console.log('fillData: ', quote.orders[1].fillData);
 

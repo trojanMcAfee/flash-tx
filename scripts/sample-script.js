@@ -14,6 +14,8 @@ const borrowed = parseEther('6478');
 let value;
 
 const addrNames = [
+  'WBTC',
+  'WETH',
   'USDC',
   'BNT',
   'TUSD',
@@ -22,10 +24,13 @@ const addrNames = [
   'ETH_Bancor',
   'yPool',
   'sushiRouter',
-  'uniswapRouter'
+  'uniswapRouter',
+  '1Inch',
 ];
 
 const addresses = [
+  '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+  '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
   '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
   '0x0000000000085d4780B73119b644AE5ecd22b376',
@@ -34,7 +39,8 @@ const addresses = [
   '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
   '0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51',
   '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
-  '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+  '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+  '0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e'
 ];
 
 
@@ -57,12 +63,16 @@ async function main() {
   console.log('Swaper0x deployed to: ', swaper0x.address);
   
   //Deploys the 2nd part of the logic contract first
-  const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash');
+  const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash', {
+    libraries: {
+      Helpers: helpers.address
+    }
+  });
   const revengeOfTheFlash = await RevengeOfTheFlash.deploy();
   await revengeOfTheFlash.deployed();
   console.log('Revenge-Of-The-Flash deployed to: ', revengeOfTheFlash.address);
 
-  //Deploys the logic contract
+  //Deploys the logic contract (and links the Helpers library to it)
   const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner', {
     libraries: {
       Helpers: helpers.address
@@ -87,9 +97,9 @@ async function main() {
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
   /**** Sending 72 ETH while I solve the 0x problem ****/
-  // value = parseUnits('73', "ether"); //gwei
-  // await IWeth.deposit({ value });
-  // await IWeth.transfer(flashlogic.address, value);
+  value = parseUnits('73', "ether"); //gwei
+  await IWeth.deposit({ value });
+  await IWeth.transfer(flashlogic.address, value);
 
   
 
@@ -136,10 +146,10 @@ async function main() {
   quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes; //problem: with one order, it works but wrong amount. With two orders (what i need), it reverts
 
 
-  const TUSDWETH_0x_quote = await getQuote2('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); //when using 882693 works but wrong amount
+  const TUSDWETH_0x_quote = await getQuote('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); //when using 882693 works but wrong amount
   quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses; //882693 * 10 ** 18 throws error on  quote
   quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes; //BigInt(882693 * 10 ** 18) gives quote but reverts on swap...works with BigInt(882693 * 10 ** 12) but wrong amount
-                                                //if i include a source, quotes give one order and it works...it doesn't work with two orders (what I need)
+                                                
   
   const USDCWBTC_0x_quote = await getQuote('USDC', 'WBTC', 984272 * 10 ** 6);                                     
   quotes_addr_0x[2] = USDCWBTC_0x_quote.addresses;
