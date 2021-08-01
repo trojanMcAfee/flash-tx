@@ -8,6 +8,7 @@ import './interfaces/MyILendingPool.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/ICurve.sol';
 import './libraries/Helpers.sol';
+import './Swaper0x.sol'; 
 
 import "hardhat/console.sol";
 
@@ -56,7 +57,6 @@ contract FlashLoaner {
 
 
     function execute(
-        // address _weth, 
         uint256 _borrowed, 
         ZrxQuote calldata _USDCBNT_0x_quote, 
         ZrxQuote calldata _TUSDWETH_0x_quote,
@@ -75,15 +75,22 @@ contract FlashLoaner {
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
 
         //0x
-        //(USDC to BNT)
-        fillQuote(
-            _USDCBNT_0x_quote.sellTokenAddress,
-            _USDCBNT_0x_quote.buyTokenAddress,
-            _USDCBNT_0x_quote.spender,
-            _USDCBNT_0x_quote.swapTarget,
-            _USDCBNT_0x_quote.swapCallData
-        );   
+        //(USDC to BNT)  
+        (bool success, bytes memory returnData) = swaper0x.delegatecall(
+            abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
+                _USDCBNT_0x_quote.sellTokenAddress,
+                _USDCBNT_0x_quote.buyTokenAddress,
+                _USDCBNT_0x_quote.spender,
+                _USDCBNT_0x_quote.swapTarget,
+                _USDCBNT_0x_quote.swapCallData 
+            )
+        );
+        require(success, 'USDCBNT 0x swap failed');
+        if (!success) {
+            console.log(Helpers._getRevertMsg(returnData));
+        }
         console.log('4.- BNT balance (swap 0x): ', MyIERC20(_adr('BNT')).balanceOf(address(this)) / 1 ether);
+
 
         //BANCOR 
         //(USDC to BNT swap)
@@ -125,87 +132,18 @@ contract FlashLoaner {
 
         // //0x
         // //(TUSD to WETH)
-        // console.log('9. - WETH balance before TUSD swap: ', MyIERC20(_weth).balanceOf(address(this)));
-
-    
-        // ParamsForRevenge memory params = ParamsForRevenge({
-        //     // oneInch: addresses['1Inch'],
-        //     TUSD: _adr('TUSD'),
-        //     WETH: _weth
-        // });
-
-        (bool success, bytes memory data) = revengeOfTheFlash.delegatecall(
+        (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall(
             abi.encodeWithSignature('executeCont((address,address,address,address,bytes))',
              _TUSDWETH_0x_quote
             )
         );
-        if (!success) {
+        if (!_success) {
             console.log(Helpers._getRevertMsg(data));
         }
-        require(success, 'Delegatecall to Revenge of The Flash failed');
-
-
-
-        // (bool success, bytes memory data) = swaper0x.call{gas: 1000000}(
-        //     abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
-        //         _TUSDWETH_0x_quote.sellTokenAddress,
-        //         _TUSDWETH_0x_quote.buyTokenAddress,
-        //         _TUSDWETH_0x_quote.spender,
-        //         _TUSDWETH_0x_quote.swapTarget,
-        //         _TUSDWETH_0x_quote.swapCallData  
-        //     )
-        // );
-        // console.log('success: ', success);
-
-
-        // console.log('gas left: ', gasleft());
-        // fillQuote(
-        //     _TUSDWETH_0x_quote.sellTokenAddress,
-        //     _TUSDWETH_0x_quote.buyTokenAddress,
-        //     _TUSDWETH_0x_quote.spender,
-        //     _TUSDWETH_0x_quote.swapTarget,
-        //     _TUSDWETH_0x_quote.swapCallData
-        // );
-        // console.log('9. - WETH balance after TUSD swap without 1 ether: ', MyIERC20(_weth).balanceOf(address(this)));
-        // console.log('9. - WETH balance after TUSD swap: ', MyIERC20(_weth).balanceOf(address(this)) / 1 ether);
-
-        
-        //UNISWAP
-        // MyIERC20(USDC).approve(uniswapRouter, type(uint).max);
-        // amount = 44739 * 10 ** 6;
-        // _path = _createPath(USDC, WBTC);
-        // _amount = IUniswapV2Router02(uniswapRouter).swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
-        // console.log('10.- WBTC balance after Uniswap swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
-
-        // //0x
-        // //(USDC to WBTC)
-        // fillQuote(
-        //     _USDCWBTC_0x_quote.sellTokenAddress,
-        //     _USDCWBTC_0x_quote.buyTokenAddress,
-        //     _USDCWBTC_0x_quote.spender,
-        //     _USDCWBTC_0x_quote.swapTarget,
-        //     _USDCWBTC_0x_quote.swapCallData
-        // );   
-        // console.log('11.- WBTC balance after 0x swap: ', MyIERC20(WBTC).balanceOf(address(this)) / 10 ** 8);
+        require(_success, 'Delegatecall to Revenge of The Flash failed');
 
     }
     
-
-    function fillQuote(
-        address sellToken,
-        address buyToken,
-        address spender,
-        address swapTarget,
-        bytes calldata swapCallData
-    ) public   
-    {        
-        require(MyIERC20(sellToken).approve(spender, type(uint).max));
-        (bool success, bytes memory returnData) = swapTarget.call(swapCallData);
-        if (!success) {
-            console.log(Helpers._getRevertMsg(returnData));
-        }
-        require(success, 'SWAP_CALL_FAILED');
-    }
 
 
 }

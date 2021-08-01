@@ -47,7 +47,7 @@ contract RevengeOfTheFlash {
         //0x
         //(TUSD to WETH)
         console.log('9. - WETH balance before TUSD swap: ', MyIERC20(_adr('WETH')).balanceOf(address(this)));
-        (bool success, bytes memory returnData) = swaper0x.delegatecall{gas: 3000000}(
+        (bool success, bytes memory returnData) = swaper0x.delegatecall(
             abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
                 _TUSDWETH_0x_quote.sellTokenAddress,
                 _TUSDWETH_0x_quote.buyTokenAddress,
@@ -70,10 +70,11 @@ contract RevengeOfTheFlash {
         uint[] memory _amount = IUniswapV2Router02(_adr('uniswapRouter')).swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
         console.log('10.- WBTC balance after Uniswap swap: ', MyIERC20(_adr('WBTC')).balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
 
+
         // //0x (using -deprecated- 1Inch protocol)
         // //(USDC to WBTC)  
         amount = 984272 * 10 ** 6;
-        I1inchProtocol oneInch = I1inchProtocol(0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e);
+        I1inchProtocol oneInch = I1inchProtocol(0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e); //fix how i store the addresses since checksum is being changedd
         MyIERC20(_adr('USDC')).approve(0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e, type(uint).max);
 
         (uint expectedReturn, uint[] memory distribution) = oneInch.getExpectedReturn(

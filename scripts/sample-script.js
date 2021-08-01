@@ -143,12 +143,12 @@ async function main() {
 
   const USDCBNT_0x_quote = await getQuote('USDC', 'BNT', 11184 * 10 ** 6);
   quotes_addr_0x[0] = USDCBNT_0x_quote.addresses;
-  quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes; //problem: with one order, it works but wrong amount. With two orders (what i need), it reverts
+  quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes; 
 
 
-  const TUSDWETH_0x_quote = await getQuote('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); //when using 882693 works but wrong amount
-  quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses; //882693 * 10 ** 18 throws error on  quote
-  quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes; //BigInt(882693 * 10 ** 18) gives quote but reverts on swap...works with BigInt(882693 * 10 ** 12) but wrong amount
+  const TUSDWETH_0x_quote = await getQuote('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); 
+  quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses; 
+  quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes; 
                                                 
   
   const USDCWBTC_0x_quote = await getQuote('USDC', 'WBTC', 984272 * 10 ** 6);                                     
