@@ -13,35 +13,6 @@ const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const borrowed = parseEther('6478');
 let value;
 
-const addrNames = [
-  'WBTC',
-  'WETH',
-  'USDC',
-  'BNT',
-  'TUSD',
-  'lendingPoolAAVE',
-  'ContractRegistry_Bancor',
-  'ETH_Bancor',
-  'yPool',
-  'sushiRouter',
-  'uniswapRouter',
-  '1Inch',
-];
-
-const addresses = [
-  '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-  '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-  '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-  '0x0000000000085d4780B73119b644AE5ecd22b376',
-  '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
-  '0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4',
-  '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  '0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51',
-  '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
-  '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-  '0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e'
-];
 
 
 async function main() {
@@ -78,7 +49,7 @@ async function main() {
       Helpers: helpers.address
     }
   });
-  const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address, addrNames, addresses);
+  const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address);
   await flashlogic.deployed();
   console.log('flashlogic deployed to: ', flashlogic.address);
 

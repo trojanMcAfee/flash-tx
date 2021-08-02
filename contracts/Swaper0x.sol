@@ -9,6 +9,7 @@ import 'hardhat/console.sol';
 
 
 contract Swaper0x {
+    
 
     struct ZrxQuote {
         address sellTokenAddress;
@@ -18,7 +19,7 @@ contract Swaper0x {
         bytes swapCallData;
     }
 
-    mapping(string => address) addresses;
+    // mapping(string => address) addresses;
 
     address swaper0x;
     address revengeOfTheFlash;
