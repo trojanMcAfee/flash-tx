@@ -33,7 +33,6 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         borrowed = _borrowed;
     }
 
-    // function() external payable {}
 
     function _getZrxQuote(
         address[4][] memory _quotesAddr, 
