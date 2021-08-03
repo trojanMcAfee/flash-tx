@@ -88,7 +88,6 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
 
 
     function executeCall(
-        // address _weth, 
         ZrxQuote memory _USDCBNT_0x_quote, 
         ZrxQuote memory _TUSDWETH_0x_quote,
         ZrxQuote memory _USDCWBTC_0x_quote

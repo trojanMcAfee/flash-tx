@@ -7,6 +7,7 @@ import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import './interfaces/MyILendingPool.sol';
 import './interfaces/MyIERC20.sol';
+import './interfaces/IBalancerV1.sol';
 import './interfaces/ICurve.sol';
 import './interfaces/I1inchProtocol.sol';
 import './libraries/Helpers.sol';
@@ -33,7 +34,7 @@ contract FlashLoaner {
     IBancorNetwork bancorNetwork = IBancorNetwork(IContractRegistry(ContractRegistry_Bancor).addressOf('BancorNetwork'));
     IKyberRouter kyberRouter = IKyberRouter(0x1c87257F5e8609940Bc751a07BB085Bb7f8cDBE6);
     IKyberFactory kyberFactory = IKyberFactory(0x833e4083B7ae46CeA85695c4f7ed25CDAd8886dE);
-    
+    IBalancerV1 balancerWBTCETHpool_1 = IBalancerV1(0x221BF20c2Ad9e5d7eC8a9d1991d8E2EdcfCb9d6c);
     
 
     struct ZrxQuote {

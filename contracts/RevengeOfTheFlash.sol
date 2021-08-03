@@ -35,6 +35,7 @@ contract RevengeOfTheFlash {
     IBancorNetwork bancorNetwork;
     IKyberRouter kyberRouter;
     IKyberFactory kyberFactory;
+    IBalancerV1 balancerWBTCETHpool_1;
 
 
     struct ZrxQuote {
@@ -108,6 +109,22 @@ contract RevengeOfTheFlash {
 
         console.log('11.- Amount of WBTC traded (0x - 1Inch): ', expectedReturn / 10 ** 8);
         console.log('___11.1.- WBTC balance after 0x swap (0x - 1Inch): ', WBTC.balanceOf(address(this)) / 10 ** 8);
+
+
+        //BALANCER
+        //(1st WBTC/ETH swap)
+        amount = 1.74806084 * 10 ** 8;
+        console.log('WETH balance before Balancer swap: ', WETH.balanceOf(address(this)) / 1 ether);
+        (uint tokenAmountOut, ) = balancerWBTCETHpool_1.swapExactAmountIn(
+            address(WBTC), 
+            amount, 
+            address(WETH), 
+            0, 
+            type(uint).max
+        );
+        console.log('tokenAmountOut: ', tokenAmountOut);
+        console.log('WETH balance after Balancer swap: ', WETH.balanceOf(address(this)) / 1 ether);
+        
 
     }
 }

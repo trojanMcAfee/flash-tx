@@ -5,6 +5,7 @@ import './interfaces/ICurve.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/MyILendingPool.sol';
 import './interfaces/I1inchProtocol.sol';
+import './interfaces/IBalancerV1.sol';
 import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
@@ -33,6 +34,7 @@ contract Swaper0x {
     IBancorNetwork bancorNetwork;
     IKyberRouter kyberRouter;
     IKyberFactory kyberFactory;
+    IBalancerV1 balancerWBTCETHpool_1;
     
 
     struct ZrxQuote {
