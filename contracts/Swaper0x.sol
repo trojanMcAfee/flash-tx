@@ -37,6 +37,7 @@ contract Swaper0x {
     IKyberRouter kyberRouter;
     IKyberFactory kyberFactory;
     IBalancerV1 balancerWBTCETHpool_1;
+    IBalancerV1 balancerWBTCETHpool_2;
     
 
     struct ZrxQuote {

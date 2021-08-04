@@ -37,6 +37,7 @@ contract FlashLoaner {
     IKyberRouter kyberRouter = IKyberRouter(0x1c87257F5e8609940Bc751a07BB085Bb7f8cDBE6);
     IKyberFactory kyberFactory = IKyberFactory(0x833e4083B7ae46CeA85695c4f7ed25CDAd8886dE);
     IBalancerV1 balancerWBTCETHpool_1 = IBalancerV1(0x221BF20c2Ad9e5d7eC8a9d1991d8E2EdcfCb9d6c);
+    IBalancerV1 balancerWBTCETHpool_2 = IBalancerV1(0x1efF8aF5D577060BA4ac8A29A13525bb0Ee2A3D5);
     
 
     struct ZrxQuote {

@@ -37,6 +37,7 @@ contract RevengeOfTheFlash {
     IKyberRouter kyberRouter;
     IKyberFactory kyberFactory;
     IBalancerV1 balancerWBTCETHpool_1;
+    IBalancerV1 balancerWBTCETHpool_2; 
 
 
     struct ZrxQuote {
@@ -113,11 +114,29 @@ contract RevengeOfTheFlash {
 
 
         //BALANCER
+        uint tokenAmountOut;
         //(1st WBTC/ETH swap)
-        amount = 1.74806084 * 10 ** 8;
-        WBTC.approve(address(balancerWBTCETHpool_1), type(uint).max);
+        tokenAmountOut = balancerSwapV1(balancerWBTCETHpool_1, 1.74806084 * 10 ** 8);
+        console.log('12.- Amount of WETH received (1st Balancer swap): ', tokenAmountOut / 1 ether);
+        console.log('___12.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
 
-        (uint tokenAmountOut, ) = balancerWBTCETHpool_1.swapExactAmountIn(
+        //(2nd WBTC/ETH swap)
+        tokenAmountOut = balancerSwapV1(balancerWBTCETHpool_2, 2.62209126 * 10 ** 8);
+        console.log('13.- Amount of WETH received (2nd Balancer swap): ', tokenAmountOut / 1 ether);
+        console.log('___13.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
+        
+
+    }
+
+
+
+
+
+    function balancerSwapV1(IBalancerV1 _pool, uint _amount) private returns(uint) {
+        uint amount = _amount;
+        WBTC.approve(address(_pool), type(uint).max);
+
+        (uint tokenAmountOut, ) = _pool.swapExactAmountIn(
             address(WBTC), 
             amount, 
             address(WETH), 
@@ -126,10 +145,6 @@ contract RevengeOfTheFlash {
         );
         WETH_int.withdraw(tokenAmountOut);
 
-        // console.log('tokenAmountOut: ', tokenAmountOut / 1 ether);
-        console.log('12.- Amount of WETH received (Balancer swap): ', tokenAmountOut / 1 ether);
-        console.log('___12.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
-        
-
+        return tokenAmountOut;
     }
 }
