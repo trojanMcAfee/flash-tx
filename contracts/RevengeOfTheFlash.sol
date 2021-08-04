@@ -59,8 +59,8 @@ contract RevengeOfTheFlash {
         ZrxQuote calldata _TUSDWETH_0x_quote
     ) public {
         //General variables
-        uint amount;
         uint tradedAmount;
+        uint expectedReturn;
 
         //0x - (TUSD to WETH)
         console.log('9. - WETH balance before TUSD swap: ', WETH.balanceOf(address(this)));
@@ -92,18 +92,7 @@ contract RevengeOfTheFlash {
 
 
         //0x - (USDC to WBTC) - (using -deprecated- 1Inch protocol) 
-        amount = 984272 * 10 ** 6;
-        USDC.approve(address(oneInch), type(uint).max);
-
-        (uint expectedReturn, uint[] memory distribution) = oneInch.getExpectedReturn(
-            USDC,
-            WBTC,
-            amount,
-            10,
-            0
-        );
-        oneInch.swap(USDC, WBTC, amount, 0, distribution,0); 
-
+        expectedReturn = oneInchSwap(USDC, WBTC, 984272.740048 * 10 ** 6);
         console.log('11.- Amount of WBTC traded (0x - 1Inch): ', expectedReturn / 10 ** 8);
         console.log('___11.1.- WBTC balance after 0x swap (0x - 1Inch): ', WBTC.balanceOf(address(this)) / 10 ** 8);
 
@@ -132,20 +121,29 @@ contract RevengeOfTheFlash {
 
 
         //0x - (WBTC to WETH) - (using -deprecated- 1Inch protocol) 
-        amount = 19.66568451 * 10 ** 8;
-        WBTC.approve(address(oneInch), type(uint).max);
+        expectedReturn = oneInchSwap(WBTC, WETH, 19.66568451 * 10 ** 8);
+        console.log('16.- Amount of WETH received (0x - 1Inch): ', expectedReturn / 1 ether);
 
-        (uint _expectedReturn, uint[] memory _distribution) = oneInch.getExpectedReturn(
-            WBTC,
-            WETH,
-            amount,
+
+        console.log('USDT of impersonated: ', USDT.balanceOf(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9) / 10 ** 6);
+
+
+    }
+
+
+    function oneInchSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
+        _tokenIn.approve(address(oneInch), type(uint).max);
+
+        (uint expectedReturn, uint[] memory _distribution) = oneInch.getExpectedReturn(
+            _tokenIn,
+            _tokenOut,
+            _amount,
             10,
             0
         );
-        oneInch.swap(WBTC, WETH, amount, 0, _distribution,0);
-        console.log('16.- Amount of WETH traded (0x - 1Inch): ', _expectedReturn / 1 ether);
+        oneInch.swap(_tokenIn, _tokenOut, _amount, 0, _distribution, 0);
 
-
+        return expectedReturn;
     }
 
 
