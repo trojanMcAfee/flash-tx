@@ -26,6 +26,7 @@ contract RevengeOfTheFlash {
     MyIERC20 BNT;
     MyIERC20 TUSD;
     MyIERC20 ETH_Bancor;
+    IWETH WETH_int;
     MyILendingPool lendingPoolAAVE;
     IContractRegistry ContractRegistry_Bancor;
     ICurve yPool;
@@ -90,7 +91,7 @@ contract RevengeOfTheFlash {
         amount = 44739 * 10 ** 6;
         _path = Helpers._createPath(address(USDC), address(WBTC));
         uint[] memory _amount = uniswapRouter.swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
-        console.log('10.- WBTC balance after Uniswap swap: ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
+        console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
 
 
         //0x (using -deprecated- 1Inch protocol)
@@ -114,7 +115,8 @@ contract RevengeOfTheFlash {
         //BALANCER
         //(1st WBTC/ETH swap)
         amount = 1.74806084 * 10 ** 8;
-        console.log('WETH balance before Balancer swap: ', WETH.balanceOf(address(this)) / 1 ether);
+        WBTC.approve(address(balancerWBTCETHpool_1), type(uint).max);
+
         (uint tokenAmountOut, ) = balancerWBTCETHpool_1.swapExactAmountIn(
             address(WBTC), 
             amount, 
@@ -122,8 +124,11 @@ contract RevengeOfTheFlash {
             0, 
             type(uint).max
         );
-        console.log('tokenAmountOut: ', tokenAmountOut);
-        console.log('WETH balance after Balancer swap: ', WETH.balanceOf(address(this)) / 1 ether);
+        WETH_int.withdraw(tokenAmountOut);
+
+        // console.log('tokenAmountOut: ', tokenAmountOut / 1 ether);
+        console.log('12.- Amount of WETH received (Balancer swap): ', tokenAmountOut / 1 ether);
+        console.log('___12.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
         
 
     }

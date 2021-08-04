@@ -9,6 +9,7 @@ import './interfaces/IBalancerV1.sol';
 import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
+import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 
 import './libraries/Helpers.sol';
 
@@ -25,6 +26,7 @@ contract Swaper0x {
     MyIERC20 BNT;
     MyIERC20 TUSD;
     MyIERC20 ETH_Bancor;
+    IWETH WETH_int;
     MyILendingPool lendingPoolAAVE;
     IContractRegistry ContractRegistry_Bancor;
     ICurve yPool;

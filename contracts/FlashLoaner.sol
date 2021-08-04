@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
+import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import './interfaces/MyILendingPool.sol';
@@ -25,6 +26,7 @@ contract FlashLoaner {
     MyIERC20 BNT = MyIERC20(0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C);
     MyIERC20 TUSD = MyIERC20(0x0000000000085d4780B73119b644AE5ecd22b376);
     MyIERC20 ETH_Bancor = MyIERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IWETH WETH_int = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
     IContractRegistry ContractRegistry_Bancor = IContractRegistry(0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4);
     ICurve yPool = ICurve(0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51);
