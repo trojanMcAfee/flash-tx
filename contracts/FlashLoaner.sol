@@ -135,9 +135,9 @@ contract FlashLoaner {
         amount = 11173 * 1 ether;
         address[] memory _path;
         _path = Helpers._createPath(address(TUSD), address(WETH));
-        uint[] memory _amount;
-        _amount = sushiRouter.swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
-        console.log('8.- ETH traded (Sushiswap swap): ', _amount[1] / 1 ether, '--', _amount[1]);
+        uint[] memory tradedAmount;
+        tradedAmount = sushiRouter.swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
+        console.log('8.- ETH traded (Sushiswap swap): ', tradedAmount[1] / 1 ether, '--', tradedAmount[1]);
 
         // //0x
         // //(TUSD to WETH)

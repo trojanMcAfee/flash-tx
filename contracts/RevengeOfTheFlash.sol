@@ -60,8 +60,7 @@ contract RevengeOfTheFlash {
     ) public {
         //General variables
         uint amount;
-        address[] memory _path;
-        uint[] memory tradedAmounts;
+        uint tradedAmount;
 
         //0x - (TUSD to WETH)
         console.log('9. - WETH balance before TUSD swap: ', WETH.balanceOf(address(this)));
@@ -88,11 +87,8 @@ contract RevengeOfTheFlash {
 
         
         // UNISWAP - USDC to WBTC
-        USDC.approve(address(uniswapRouter), type(uint).max);
-        amount = 44739 * 10 ** 6;
-        _path = Helpers._createPath(address(USDC), address(WBTC));
-        tradedAmounts = uniswapRouter.swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
-        console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmounts[1]);
+        tradedAmount = sushiUni_swap(uniswapRouter, 44739 * 10 ** 6, USDC, WBTC, 0);
+        console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmount);
 
 
         //0x (using -deprecated- 1Inch protocol)
@@ -127,11 +123,13 @@ contract RevengeOfTheFlash {
         
 
         //UNISWAP - (WBTC to ETH)
-        WBTC.approve(address(uniswapRouter), type(uint).max);
-        amount = 3.49612169 * 10 ** 8;
-        _path = Helpers._createPath(address(WBTC), address(WETH));
-        tradedAmounts = uniswapRouter.swapExactTokensForETH(amount, 0, _path, address(this), block.timestamp);
-        console.log('14.- Amount of ETH received (Uniswap): ', tradedAmounts[1] / 1 ether);
+        tradedAmount = sushiUni_swap(uniswapRouter, 3.49612169 * 10 ** 8, WBTC, WETH, 1);
+        console.log('14.- Amount of ETH received (Uniswap): ', tradedAmount / 1 ether);
+
+
+        //SUSHIWAP - (WBTC to ETH)
+        tradedAmount = sushiUni_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
+        console.log('15.- Amount of ETH received (Sushiswap): ', tradedAmount / 1 ether);
 
 
     }
@@ -139,16 +137,33 @@ contract RevengeOfTheFlash {
 
 
 
+    function sushiUni_swap(
+        IUniswapV2Router02 _router, 
+        uint _amount, 
+        MyIERC20 _tokenIn, 
+        MyIERC20 _tokenOut, 
+        uint _dir
+    ) private returns(uint) {
+        _tokenIn.approve(address(_router), type(uint).max);
+        address[] memory _path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
+        uint[] memory tradedAmounts = 
+            _dir == 1 
+                ? 
+            _router.swapExactTokensForETH(_amount, 0, _path, address(this), block.timestamp)
+                :
+            _router.swapExactTokensForTokens(_amount, 0, _path, address(this), block.timestamp);
+
+        return tradedAmounts[1];
+    }
 
 
 
     function balancerSwapV1(IBalancerV1 _pool, uint _amount) private returns(uint) {
-        uint amount = _amount;
         WBTC.approve(address(_pool), type(uint).max);
 
         (uint tokenAmountOut, ) = _pool.swapExactAmountIn(
             address(WBTC), 
-            amount, 
+            _amount, 
             address(WETH), 
             0, 
             type(uint).max
