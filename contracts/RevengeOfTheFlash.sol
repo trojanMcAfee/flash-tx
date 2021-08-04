@@ -91,8 +91,7 @@ contract RevengeOfTheFlash {
         console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmount);
 
 
-        //0x (using -deprecated- 1Inch protocol)
-        //(USDC to WBTC)  
+        //0x - (USDC to WBTC) - (using -deprecated- 1Inch protocol) 
         amount = 984272 * 10 ** 6;
         USDC.approve(address(oneInch), type(uint).max);
 
@@ -130,6 +129,21 @@ contract RevengeOfTheFlash {
         //SUSHIWAP - (WBTC to ETH)
         tradedAmount = sushiUni_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
         console.log('15.- Amount of ETH received (Sushiswap): ', tradedAmount / 1 ether);
+
+
+        //0x - (WBTC to WETH) - (using -deprecated- 1Inch protocol) 
+        amount = 19.66568451 * 10 ** 8;
+        WBTC.approve(address(oneInch), type(uint).max);
+
+        (uint _expectedReturn, uint[] memory _distribution) = oneInch.getExpectedReturn(
+            WBTC,
+            WETH,
+            amount,
+            10,
+            0
+        );
+        oneInch.swap(WBTC, WETH, amount, 0, _distribution,0);
+        console.log('16.- Amount of WETH traded (0x - 1Inch): ', _expectedReturn / 1 ether);
 
 
     }

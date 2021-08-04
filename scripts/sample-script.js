@@ -9,9 +9,12 @@ const { parseEther, parseUnits, formatEther } = ethers.utils;
 
 const soloMarginAddr = legos.dydx.soloMargin.address;
 const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'; 
+const wbtcAdr = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 // const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 const borrowed = parseEther('6478');
 let value;
+
+
 
 
 
@@ -20,6 +23,7 @@ async function main() {
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
   console.log('Deployers address: ', signerAddr);
+
 
   //Deploy the Helpers library
   const Helpers = await hre.ethers.getContractFactory('Helpers');
@@ -67,10 +71,29 @@ async function main() {
   await IWeth.deposit({ value });
   await IWeth.transfer(dxdxFlashloaner.address, value);
 
+  
   /**** Sending 72 ETH while I solve the 0x problem ****/
   value = parseUnits('73', "ether"); //gwei
   await IWeth.deposit({ value });
   await IWeth.transfer(flashlogic.address, value);
+
+
+  //** impersonating..... */
+  const IWbtc = await hre.ethers.getContractAt('IWBTC', wbtcAdr);
+  const impersonated = '0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9';
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: [impersonated],
+  });
+  
+  const signerImp = await ethers.getSigner(impersonated)
+  await IWbtc.connect(signerImp).transfer(flashlogic.address, 15 * 10 ** 8);
+
+  await hre.network.provider.request({
+    method: "hardhat_stopImpersonatingAccount",
+    params: [impersonated],
+  });
+//**** end of impersonating */
 
   
 
