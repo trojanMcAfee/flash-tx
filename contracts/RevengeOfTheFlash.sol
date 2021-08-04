@@ -61,9 +61,9 @@ contract RevengeOfTheFlash {
         //General variables
         uint amount;
         address[] memory _path;
+        uint[] memory tradedAmounts;
 
-        //0x
-        //(TUSD to WETH)
+        //0x - (TUSD to WETH)
         console.log('9. - WETH balance before TUSD swap: ', WETH.balanceOf(address(this)));
         
         (bool success, bytes memory returnData) = swaper0x.delegatecall(
@@ -87,12 +87,12 @@ contract RevengeOfTheFlash {
         console.log('9. - WETH balance after TUSD swap: ', WETH.balanceOf(address(this)) / 1 ether);
 
         
-        // UNISWAP
+        // UNISWAP - USDC to WBTC
         USDC.approve(address(uniswapRouter), type(uint).max);
         amount = 44739 * 10 ** 6;
         _path = Helpers._createPath(address(USDC), address(WBTC));
-        uint[] memory _amount = uniswapRouter.swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
-        console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', _amount[1]);
+        tradedAmounts = uniswapRouter.swapExactTokensForTokens(amount, 0, _path, address(this), block.timestamp);
+        console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmounts[1]);
 
 
         //0x (using -deprecated- 1Inch protocol)
@@ -126,7 +126,17 @@ contract RevengeOfTheFlash {
         console.log('___13.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
         
 
+        //UNISWAP - (WBTC to ETH)
+        WBTC.approve(address(uniswapRouter), type(uint).max);
+        amount = 3.49612169 * 10 ** 8;
+        _path = Helpers._createPath(address(WBTC), address(WETH));
+        tradedAmounts = uniswapRouter.swapExactTokensForETH(amount, 0, _path, address(this), block.timestamp);
+        console.log('14.- Amount of ETH received (Uniswap): ', tradedAmounts[1] / 1 ether);
+
+
     }
+
+
 
 
 
