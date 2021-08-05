@@ -10,6 +10,8 @@ import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.so
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
+import './interfaces/IDODOProxyV2.sol';
+
 
 import './libraries/Helpers.sol';
 
@@ -38,6 +40,7 @@ contract Swaper0x {
     IKyberFactory kyberFactory;
     IBalancerV1 balancerWBTCETHpool_1;
     IBalancerV1 balancerWBTCETHpool_2;
+    IDODOProxyV2 dodoProxyV2;
     
 
     struct ZrxQuote {

@@ -7,6 +7,7 @@ import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import './interfaces/MyILendingPool.sol';
+import './interfaces/IDODOProxyV2.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/IBalancerV1.sol';
 import './interfaces/ICurve.sol';
@@ -38,6 +39,7 @@ contract FlashLoaner {
     IKyberFactory kyberFactory = IKyberFactory(0x833e4083B7ae46CeA85695c4f7ed25CDAd8886dE);
     IBalancerV1 balancerWBTCETHpool_1 = IBalancerV1(0x221BF20c2Ad9e5d7eC8a9d1991d8E2EdcfCb9d6c);
     IBalancerV1 balancerWBTCETHpool_2 = IBalancerV1(0x1efF8aF5D577060BA4ac8A29A13525bb0Ee2A3D5);
+    IDODOProxyV2 dodoProxyV2 = IDODOProxyV2(0xa356867fDCEa8e71AEaF87805808803806231FdC);
     
 
     struct ZrxQuote {
