@@ -1,17 +1,19 @@
 const { legos } = require("@studydefi/money-legos");
 // const uniRouterABI = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json').abi;
 const fetch = require("node-fetch");
+const { generatePseudoRandomSalt, Order, signatureUtils } = require('@0x/order-utils');
+
 
 
 const { createQueryString, API_QUOTE_URL, getQuote, getQuote2 } = require('./relayer.js');
 const { parseEther, parseUnits, formatEther } = ethers.utils;
-// const { MaxUint256 } = ethers.constants;
+const { MaxUint256 } = ethers.constants;
 
 const soloMarginAddr = legos.dydx.soloMargin.address;
 const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'; 
 const wbtcAdr = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
-// const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
-const borrowed = parseEther('6478');
+const bntAddr = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C';
+const borrowed = parseEther('6478.183133980298798568');
 let value;
 
 
@@ -66,33 +68,44 @@ async function main() {
 
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
-  const IWeth = await hre.ethers.getContractAt('IWETH', wethAddr);
+  const IWETH = await hre.ethers.getContractAt('IWETH', wethAddr);
   value = parseUnits('2', "gwei"); //gwei
-  await IWeth.deposit({ value });
-  await IWeth.transfer(dxdxFlashloaner.address, value);
+  await IWETH.deposit({ value });
+  await IWETH.transfer(dxdxFlashloaner.address, value);
 
-
+  
   /**** Sending 72 ETH while I solve the 0x problem ****/
-  value = parseUnits('73', "ether"); //gwei
-  await IWeth.deposit({ value });
-  await IWeth.transfer(flashlogic.address, value);
+  // value = parseUnits('73', "ether"); //gwei
+  // await IWeth.deposit({ value });
+  // await IWeth.transfer(flashlogic.address, value);
 
 
   //** impersonating..... */
-  // const IWbtc = await hre.ethers.getContractAt('IWBTC', wbtcAdr);
-  // const impersonated = '0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9';
-  // await hre.network.provider.request({
-  //   method: "hardhat_impersonateAccount",
-  //   params: [impersonated],
-  // });
-  
-  // const signerImp = await ethers.getSigner(impersonated)
-  // await IWbtc.connect(signerImp).transfer(flashlogic.address, 15 * 10 ** 8);
+  const IBNT = await hre.ethers.getContractAt('MyIERC20', bntAddr);
+  const IWBTC = await hre.ethers.getContractAt('MyIERC20', wbtcAdr);
+  const offchainRelayer = '0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9';
 
-  // await hre.network.provider.request({
-  //   method: "hardhat_stopImpersonatingAccount",
-  //   params: [impersonated],
-  // });
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: [offchainRelayer],
+  });
+  
+  const signerImp = await ethers.getSigner(offchainRelayer)
+  //1st swap (USDC to BNT - transfer BNT) //call approve from the swaper0x contract
+  await IBNT.connect(signerImp).transfer(swaper0x.address, parseEther('1506.932141071984328329'));
+  //2nd swap (TUSD to WETH - transfer WETH)
+  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('224.817255779374783216'));
+  //3rd swap (USDC to WBTC - transfer WBTC)
+  await IWBTC.connect(signerImp).transfer(swaper0x.address, 19.30930945 * 10 ** 8);
+  //4th swap (WBTC to WETH - transfer WETH)
+  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('253.071556591057205072'));
+
+
+
+  await hre.network.provider.request({
+    method: "hardhat_stopImpersonatingAccount",
+    params: [offchainRelayer],
+  });
 //**** end of impersonating */
 
   

@@ -6,7 +6,8 @@ import './interfaces/MyIERC20.sol';
 import './interfaces/MyILendingPool.sol';
 import './interfaces/I1inchProtocol.sol';
 import './interfaces/IBalancerV1.sol';
-import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
+import './interfaces/IExchange0xV2.sol';
+// import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
@@ -32,15 +33,37 @@ contract Swaper0x {
     MyILendingPool lendingPoolAAVE;
     IContractRegistry ContractRegistry_Bancor;
     ICurve yPool;
+    ICurve dai_usdc_usdt_Pool;
     IUniswapV2Router02 sushiRouter;
     IUniswapV2Router02 uniswapRouter;
     I1inchProtocol oneInch;
     IBancorNetwork bancorNetwork;
-    IKyberRouter kyberRouter;
-    IKyberFactory kyberFactory;
     IBalancerV1 balancerWBTCETHpool_1;
     IBalancerV1 balancerWBTCETHpool_2;
     IDODOProxyV2 dodoProxyV2;
+    IExchange0xV2 exchange0xV2;
+
+    struct FillResults {
+        uint256 makerAssetFilledAmount;  
+        uint256 takerAssetFilledAmount;  
+        uint256 makerFeePaid;            
+        uint256 takerFeePaid;            
+    }
+
+    struct Order {
+        address makerAddress;               
+        address takerAddress;              
+        address feeRecipientAddress;    
+        address senderAddress;         
+        uint256 makerAssetAmount;        
+        uint256 takerAssetAmount;           
+        uint256 makerFee;             
+        uint256 takerFee;              
+        uint256 expirationTimeSeconds;           
+        uint256 salt;                   
+        bytes makerAssetData;          
+        bytes takerAssetData;       
+    }
     
 
     struct ZrxQuote {
@@ -56,6 +79,11 @@ contract Swaper0x {
     address revengeOfTheFlash;
 
     receive() external payable {}
+
+    function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external returns(uint) {
+        _tokenOut.transfer(_recipient, _amountTokenOut);
+        return _amountTokenOut;
+    }
 
 
     function fillQuote(
@@ -75,52 +103,80 @@ contract Swaper0x {
     }
 
 
-    function useCurve() external {
-        //TUSD to USDT
-        MyIERC20(TUSD).approve(address(yPool), type(uint).max);
-        uint amount = 882693 * 1 ether;
-        yPool.exchange_underlying(3, 2, amount, 1);
+    function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
+        address[] memory dodoPairs = new address[](1);
+        dodoPairs[0] = _pool;
+        address DODOapprove = 0xCB859eA579b28e02B87A1FDE08d087ab9dbE5149;
+        _tokenIn.approve(DODOapprove, type(uint).max);
 
-        console.log('USDT balance: ', USDT.balanceOf(address(this)) / 10 ** 6);
+        uint tradedAmount = dodoProxyV2.dodoSwapV1(
+            address(_tokenIn),
+            address(_tokenOut),
+            _amount,
+            1,
+            dodoPairs,
+            1,
+            false,
+            block.timestamp
+        );
 
-        //USDT to WETH
-
-        address[] memory pools = kyberFactory.getPools(USDT, WETH);
-        MyIERC20[] memory path = new MyIERC20[](2);
-        path[0] = USDT;
-        path[1] = WETH;
-        amount = USDT.balanceOf(address(this));
-        // console.log('amount to swap on kyber: ', amount / 10 ** 6);
-
-
-        console.log('pool: ', pools[0]);
-        console.log('msg.sender: ', msg.sender);
-        console.log('address(this): ', address(this));
-
-        address poolAddr = pools[0];
-        IPoolWETHUSDT pool = IPoolWETHUSDT(poolAddr);
-        address token0 = pool.token0();
-        console.log('token0: ', token0);
-
-        // (uint112 reserve0, uint112 reserve1, uint32 timestamp) = pool.getReserves();
-        // console.log('reserve0: ', reserve0);
-        // console.log('reserve1: ', reserve1);
-        // console.log('timestamp: ', timestamp);
-
-        // (uint112 reserve02, uint112 reserve12, uint112 vReserve0, uint112 vReserve1, ) = pool.getTradeInfo();
-        // console.log('reserve02: ', reserve02 / 10 ** 18);
-        // console.log('reserve12: ', reserve12 / 10 ** 6);
-        // console.log('vReserve0: ', vReserve0 / 10 ** 18);
-        // console.log('vReserve1: ', vReserve1 / 10 ** 6);
+        return tradedAmount;
+    }
 
 
-        USDT.approve(address(kyberRouter), type(uint).max);
-        console.log('hi3');
-        // kyberRouter.swapExactTokensForTokens(amount, 0, poolPath, path, address(this), block.timestamp);
-        // kyberRouter.swapExactTokensForETH(amount, 0, pools, path, address(this), block.timestamp);
-       
 
-        console.log('WETH balance: ', WETH.balanceOf(address(this)));
+    function oneInchSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
+        _tokenIn.approve(address(oneInch), type(uint).max);
+
+        (uint expectedReturn, uint[] memory _distribution) = oneInch.getExpectedReturn(
+            _tokenIn,
+            _tokenOut,
+            _amount,
+            10,
+            0
+        );
+        oneInch.swap(_tokenIn, _tokenOut, _amount, 0, _distribution, 0);
+
+        return expectedReturn;
+    }
+
+
+
+
+    function sushiUni_swap(
+        IUniswapV2Router02 _router, 
+        uint _amount, 
+        MyIERC20 _tokenIn, 
+        MyIERC20 _tokenOut, 
+        uint _dir
+    ) private returns(uint) {
+        _tokenIn.approve(address(_router), type(uint).max);
+        address[] memory _path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
+        uint[] memory tradedAmounts = 
+            _dir == 1 
+                ? 
+            _router.swapExactTokensForETH(_amount, 0, _path, address(this), block.timestamp)
+                :
+            _router.swapExactTokensForTokens(_amount, 0, _path, address(this), block.timestamp);
+
+        return tradedAmounts[1];
+    }
+
+
+
+    function balancerSwapV1(IBalancerV1 _pool, uint _amount) private returns(uint) {
+        WBTC.approve(address(_pool), type(uint).max);
+
+        (uint tradedAmount, ) = _pool.swapExactAmountIn(
+            address(WBTC), 
+            _amount, 
+            address(WETH), 
+            0, 
+            type(uint).max
+        );
+        WETH_int.withdraw(tradedAmount);
+
+        return tradedAmount;
     }
 
 

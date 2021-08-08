@@ -5,13 +5,13 @@ pragma abicoder v2;
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
-import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import './interfaces/MyILendingPool.sol';
 import './interfaces/IDODOProxyV2.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/IBalancerV1.sol';
 import './interfaces/ICurve.sol';
 import './interfaces/I1inchProtocol.sol';
+import './interfaces/IExchange0xV2.sol';
 import './libraries/Helpers.sol';
 import './Swaper0x.sol'; 
 
@@ -31,16 +31,37 @@ contract FlashLoaner {
     MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
     IContractRegistry ContractRegistry_Bancor = IContractRegistry(0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4);
     ICurve yPool = ICurve(0x45F783CCE6B7FF23B2ab2D70e416cdb7D6055f51);
+    ICurve dai_usdc_usdt_Pool = ICurve(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
     IUniswapV2Router02 sushiRouter = IUniswapV2Router02(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
     IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     I1inchProtocol oneInch = I1inchProtocol(0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e);
     IBancorNetwork bancorNetwork = IBancorNetwork(IContractRegistry(ContractRegistry_Bancor).addressOf('BancorNetwork'));
-    IKyberRouter kyberRouter = IKyberRouter(0x1c87257F5e8609940Bc751a07BB085Bb7f8cDBE6);
-    IKyberFactory kyberFactory = IKyberFactory(0x833e4083B7ae46CeA85695c4f7ed25CDAd8886dE);
     IBalancerV1 balancerWBTCETHpool_1 = IBalancerV1(0x221BF20c2Ad9e5d7eC8a9d1991d8E2EdcfCb9d6c);
     IBalancerV1 balancerWBTCETHpool_2 = IBalancerV1(0x1efF8aF5D577060BA4ac8A29A13525bb0Ee2A3D5);
     IDODOProxyV2 dodoProxyV2 = IDODOProxyV2(0xa356867fDCEa8e71AEaF87805808803806231FdC);
+    IExchange0xV2 exchange0xV2 = IExchange0xV2(0x080bf510FCbF18b91105470639e9561022937712);
     
+    struct FillResults {
+        uint256 makerAssetFilledAmount;  
+        uint256 takerAssetFilledAmount;  
+        uint256 makerFeePaid;            
+        uint256 takerFeePaid;            
+    }
+
+    struct Order {
+        address makerAddress;               
+        address takerAddress;              
+        address feeRecipientAddress;    
+        address senderAddress;         
+        uint256 makerAssetAmount;        
+        uint256 takerAssetAmount;           
+        uint256 makerFee;             
+        uint256 takerFee;              
+        uint256 expirationTimeSeconds;           
+        uint256 salt;                   
+        bytes makerAssetData;          
+        bytes takerAssetData;       
+    }
 
     struct ZrxQuote {
         address sellTokenAddress;
@@ -73,7 +94,8 @@ contract FlashLoaner {
         ZrxQuote calldata _TUSDWETH_0x_quote,
         ZrxQuote calldata _USDCWBTC_0x_quote
     ) public {
-        
+
+        console.log('WETH balance of swaper0x: ', WETH.balanceOf(swaper0x), address(this) == swaper0x);
 
         //AAVE
         uint aaveUSDCloan = 17895868 * 10 ** 6;
@@ -86,20 +108,33 @@ contract FlashLoaner {
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
 
         //0x
-        //(USDC to BNT)  
-        (bool success, bytes memory returnData) = swaper0x.delegatecall(
-            abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
-                _USDCBNT_0x_quote.sellTokenAddress,
-                _USDCBNT_0x_quote.buyTokenAddress,
-                _USDCBNT_0x_quote.spender,
-                _USDCBNT_0x_quote.swapTarget,
-                _USDCBNT_0x_quote.swapCallData 
+        //(USDC to BNT)
+        USDC.transfer(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9, 11184.9175 * 10 ** 6);
+        (bool success, bytes memory returnData) = swaper0x.call(
+            abi.encodeWithSignature(
+                'withdrawFromPool(address,address,uint256)', 
+                BNT, address(this), 1506.932141071984328329 * 1 ether
             )
         );
-        require(success, 'USDCBNT 0x swap failed');
         if (!success) {
             console.log(Helpers._getRevertMsg(returnData));
         }
+        require(success, 'USDC/BNT withdrawal from pool failed');
+
+
+        // (bool success, bytes memory returnData) = swaper0x.delegatecall(
+        //     abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
+        //         _USDCBNT_0x_quote.sellTokenAddress,
+        //         _USDCBNT_0x_quote.buyTokenAddress,
+        //         _USDCBNT_0x_quote.spender,
+        //         _USDCBNT_0x_quote.swapTarget,
+        //         _USDCBNT_0x_quote.swapCallData 
+        //     )
+        // );
+        // require(success, 'USDCBNT 0x swap failed');
+        // if (!success) {
+        //     console.log(Helpers._getRevertMsg(returnData));
+        // }
         console.log('4.- BNT balance (swap 0x): ', BNT.balanceOf(address(this)) / 1 ether);
 
 
@@ -109,7 +144,7 @@ contract FlashLoaner {
         uint minReturn; 
         uint amount;
         path = bancorNetwork.conversionPath(USDC, BNT);
-        amount = 883608 * 10 ** 6; 
+        amount = 883608.4825 * 10 ** 6; 
         minReturn = bancorNetwork.rateByPath(path, amount);
         USDC.approve(address(bancorNetwork), type(uint).max);
 
@@ -128,21 +163,20 @@ contract FlashLoaner {
 
         //CURVE (USDC to TUSD)
         USDC.approve(address(yPool), type(uint).max);
-        amount = 894793 * 10 ** 6;
+        amount = 894793.4 * 10 ** 6;
         yPool.exchange_underlying(1, 3, amount, 1);
         console.log('7.- TUSD balance (Curve swap): ', TUSD.balanceOf(address(this)) / 1 ether);
 
-        // //SUSHISWAP 
+        // //SUSHISWAP (TUSD to ETH)
         TUSD.approve(address(sushiRouter), type(uint).max);
-        amount = 11173 * 1 ether;
+        amount = 11173.332238593491520262 * 1 ether;
         address[] memory _path;
         _path = Helpers._createPath(address(TUSD), address(WETH));
         uint[] memory tradedAmount;
         tradedAmount = sushiRouter.swapExactTokensForETH(amount, 0, _path, payable(address(this)), block.timestamp);
         console.log('8.- ETH traded (Sushiswap swap): ', tradedAmount[1] / 1 ether, '--', tradedAmount[1]);
 
-        // //0x
-        // //(TUSD to WETH)
+        //Moving to Revenge
         (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall(
             abi.encodeWithSignature('executeCont((address,address,address,address,bytes))',
              _TUSDWETH_0x_quote
