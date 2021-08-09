@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
-// import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import './interfaces/IExchange0xV2.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/ICurve.sol';
@@ -13,6 +12,9 @@ import './libraries/Structs0x.sol';
 import './FlashLoaner.sol';
 import './interfaces/I1inchProtocol.sol';
 import './Swaper0x.sol';
+import {ICroDefiSwapPair, ICroDefiSwapRouter02} from './interfaces/ICroDefiSwapPair.sol';
+import './libraries/MySafeERC20.sol';
+// import './interfaces/ICroDefiSwapPair.sol';
 
 import "hardhat/console.sol";
 
@@ -41,6 +43,8 @@ contract RevengeOfTheFlash {
     IBalancerV1 balancerWBTCETHpool_2; 
     IDODOProxyV2 dodoProxyV2;
     IExchange0xV2 exchange0xV2;
+    ICroDefiSwapPair croDefiSwap;
+    ICroDefiSwapRouter02 croDefiRouter;
 
 
 
@@ -123,7 +127,7 @@ contract RevengeOfTheFlash {
 
         
         // UNISWAP - USDC to WBTC
-        tradedAmount = sushiUni_swap(uniswapRouter, 44739 * 10 ** 6, USDC, WBTC, 0);
+        tradedAmount = sushiUniCro_swap(uniswapRouter, 44739 * 10 ** 6, USDC, WBTC, 0);
         console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmount);
 
 
@@ -165,12 +169,12 @@ contract RevengeOfTheFlash {
         
 
         // UNISWAP - (WBTC to ETH)
-        tradedAmount = sushiUni_swap(uniswapRouter, 3.49612169 * 10 ** 8, WBTC, WETH, 1);
+        tradedAmount = sushiUniCro_swap(uniswapRouter, 3.49612169 * 10 ** 8, WBTC, WETH, 1);
         console.log('15.- Amount of ETH received (Uniswap): ', tradedAmount / 1 ether);
 
 
         // SUSHIWAP - (WBTC to ETH)
-        tradedAmount = sushiUni_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
+        tradedAmount = sushiUniCro_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
         console.log('16.- Amount of ETH received (Sushiswap): ', tradedAmount / 1 ether);
 
 
@@ -194,6 +198,23 @@ contract RevengeOfTheFlash {
         //CURVE - (USDC to USDT)
         curveSwap(dai_usdc_usdt_Pool, USDC, 6263553.80031 * 10 ** 6, 1, 2, 0);
         console.log('18.- USDT balance after swap (Curve): ', USDT.balanceOf(address(this)) / 10 ** 6);
+
+
+        //CRO Protocol (USDT to WETH)
+        // MySafeERC20.safeApprove(USDT, address(croDefiRouter), type(uint).max);
+        // address[] memory _path = Helpers._createPath(address(USDT), address(WETH));
+
+        // croDefiRouter.swapExactTokensForTokens(
+        //     78224.963477 * 10 ** 6,
+        //     0,
+        //     _path,
+        //     address(this),
+        //     block.timestamp
+        // );
+
+        tradedAmount = sushiUniCro_swap(croDefiRouter, 78224.963477 * 10 ** 6, USDT, WETH);
+        console.log('19.- WETH traded (CRO Protocol): ', tradedAmount / 1 ether);
+
     }
 
     
@@ -254,9 +275,28 @@ contract RevengeOfTheFlash {
     }
 
 
+    function sushiUniCro_swap(
+        ICroDefiSwapRouter02 _router, 
+        uint _amount, 
+        MyIERC20 _tokenIn, 
+        MyIERC20 _tokenOut
+    ) private returns(uint) {
+        MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
+        address[] memory path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
+
+        uint[] memory tradedAmounts =_router.swapExactTokensForTokens(
+            _amount,
+            0,
+            path,
+            address(this),
+            block.timestamp
+        );
+        return tradedAmounts[1];
+    }
 
 
-    function sushiUni_swap(
+
+    function sushiUniCro_swap(
         IUniswapV2Router02 _router, 
         uint _amount, 
         MyIERC20 _tokenIn, 
@@ -274,6 +314,7 @@ contract RevengeOfTheFlash {
 
         return tradedAmounts[1];
     }
+
 
 
 

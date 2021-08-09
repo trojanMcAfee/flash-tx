@@ -7,11 +7,12 @@ import './interfaces/MyILendingPool.sol';
 import './interfaces/I1inchProtocol.sol';
 import './interfaces/IBalancerV1.sol';
 import './interfaces/IExchange0xV2.sol';
-// import {IKyberRouter, IKyberFactory, IPoolWETHUSDT} from './interfaces/IKyber.sol';
 import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import './interfaces/IDODOProxyV2.sol';
+import {ICroDefiSwapPair, ICroDefiSwapRouter02} from './interfaces/ICroDefiSwapPair.sol';
+// import './interfaces/ICroDefiSwapPair.sol';
 
 
 import './libraries/Helpers.sol';
@@ -42,6 +43,9 @@ contract Swaper0x {
     IBalancerV1 balancerWBTCETHpool_2;
     IDODOProxyV2 dodoProxyV2;
     IExchange0xV2 exchange0xV2;
+    ICroDefiSwapPair croDefiSwap;
+    ICroDefiSwapRouter02 croDefiRouter;
+
 
     struct FillResults {
         uint256 makerAssetFilledAmount;  
@@ -143,7 +147,7 @@ contract Swaper0x {
 
 
 
-    function sushiUni_swap(
+    function sushiUniCro_swap(
         IUniswapV2Router02 _router, 
         uint _amount, 
         MyIERC20 _tokenIn, 

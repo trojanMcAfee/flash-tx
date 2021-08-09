@@ -9,4 +9,5 @@ interface MyIERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
     function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
     function allowance(address owner, address spender) external view returns (uint256);
+    function decimals() external view returns (uint8);
 }
