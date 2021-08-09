@@ -11,8 +11,7 @@ import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import './interfaces/IDODOProxyV2.sol';
-import {ICroDefiSwapPair, ICroDefiSwapRouter02} from './interfaces/ICroDefiSwapPair.sol';
-// import './interfaces/ICroDefiSwapPair.sol';
+import './interfaces/ICroDefiSwapRouter02.sol';
 
 
 import './libraries/Helpers.sol';
@@ -43,8 +42,8 @@ contract Swaper0x {
     IBalancerV1 balancerWBTCETHpool_2;
     IDODOProxyV2 dodoProxyV2;
     IExchange0xV2 exchange0xV2;
-    ICroDefiSwapPair croDefiSwap;
     ICroDefiSwapRouter02 croDefiRouter;
+    Swaper0x exchange;
 
 
     struct FillResults {

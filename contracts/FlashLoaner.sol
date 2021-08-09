@@ -12,8 +12,7 @@ import './interfaces/IBalancerV1.sol';
 import './interfaces/ICurve.sol';
 import './interfaces/I1inchProtocol.sol';
 import './interfaces/IExchange0xV2.sol';
-import {ICroDefiSwapPair, ICroDefiSwapRouter02} from './interfaces/ICroDefiSwapPair.sol';
-// import './interfaces/ICroDefiSwapPair.sol';
+import './interfaces/ICroDefiSwapRouter02.sol';
 import './libraries/Helpers.sol';
 import './Swaper0x.sol'; 
 
@@ -42,8 +41,8 @@ contract FlashLoaner {
     IBalancerV1 balancerWBTCETHpool_2 = IBalancerV1(0x1efF8aF5D577060BA4ac8A29A13525bb0Ee2A3D5);
     IDODOProxyV2 dodoProxyV2 = IDODOProxyV2(0xa356867fDCEa8e71AEaF87805808803806231FdC);
     IExchange0xV2 exchange0xV2 = IExchange0xV2(0x080bf510FCbF18b91105470639e9561022937712);
-    ICroDefiSwapPair croDefiSwap = ICroDefiSwapPair(0x74C99F3f5331676f6AEc2756e1F39b4FC029a83E);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
+    Swaper0x exchange;
 
 
     struct FillResults {
@@ -84,6 +83,11 @@ contract FlashLoaner {
     constructor(address _swaper0x, address _revengeOfTheFlash) {
         swaper0x = _swaper0x;
         revengeOfTheFlash = _revengeOfTheFlash;
+    }
+
+
+    function setExchange(Swaper0x _swaper0x) public {
+        exchange = _swaper0x;
     }
 
 

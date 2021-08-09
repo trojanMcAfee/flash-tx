@@ -57,6 +57,7 @@ async function main() {
   });
   const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address);
   await flashlogic.deployed();
+  await flashlogic.setExchange(swaper0x.address);
   console.log('flashlogic deployed to: ', flashlogic.address);
 
   
@@ -99,7 +100,8 @@ async function main() {
   await IWBTC.connect(signerImp).transfer(swaper0x.address, 19.30930945 * 10 ** 8);
   //4th swap (WBTC to WETH - transfer WETH)
   await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('253.071556591057205072'));
-
+  //5th swap (USDT to WETH - transfer WETH)
+  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('239.890714288415882321'));
 
 
   await hre.network.provider.request({

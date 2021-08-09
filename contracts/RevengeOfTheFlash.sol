@@ -12,9 +12,8 @@ import './libraries/Structs0x.sol';
 import './FlashLoaner.sol';
 import './interfaces/I1inchProtocol.sol';
 import './Swaper0x.sol';
-import {ICroDefiSwapPair, ICroDefiSwapRouter02} from './interfaces/ICroDefiSwapPair.sol';
 import './libraries/MySafeERC20.sol';
-// import './interfaces/ICroDefiSwapPair.sol';
+import './interfaces/ICroDefiSwapRouter02.sol';
 
 import "hardhat/console.sol";
 
@@ -43,8 +42,8 @@ contract RevengeOfTheFlash {
     IBalancerV1 balancerWBTCETHpool_2; 
     IDODOProxyV2 dodoProxyV2;
     IExchange0xV2 exchange0xV2;
-    ICroDefiSwapPair croDefiSwap;
     ICroDefiSwapRouter02 croDefiRouter;
+    Swaper0x exchange;
 
 
 
@@ -195,26 +194,19 @@ contract RevengeOfTheFlash {
         console.log('17.- WETH received (0x swap): ', amountTokenOut / 1 ether);
 
 
-        //CURVE - (USDC to USDT)
+        // CURVE - (USDC to USDT)
         curveSwap(dai_usdc_usdt_Pool, USDC, 6263553.80031 * 10 ** 6, 1, 2, 0);
         console.log('18.- USDT balance after swap (Curve): ', USDT.balanceOf(address(this)) / 10 ** 6);
 
 
-        //CRO Protocol (USDT to WETH)
-        // MySafeERC20.safeApprove(USDT, address(croDefiRouter), type(uint).max);
-        // address[] memory _path = Helpers._createPath(address(USDT), address(WETH));
-
-        // croDefiRouter.swapExactTokensForTokens(
-        //     78224.963477 * 10 ** 6,
-        //     0,
-        //     _path,
-        //     address(this),
-        //     block.timestamp
-        // );
-
+        // CRO Protocol (USDT to WETH)
         tradedAmount = sushiUniCro_swap(croDefiRouter, 78224.963477 * 10 ** 6, USDT, WETH);
         console.log('19.- WETH traded (CRO Protocol): ', tradedAmount / 1 ether);
 
+
+        // 0x - (USDC to WBTC) *******
+        tradedAmount = exchange.withdrawFromPool(WETH, address(this), 239.890714288415882321 * 1 ether);
+        console.log('20.- WETH withdrawn from the Exchange: ', tradedAmount / 1 ether);
     }
 
     
