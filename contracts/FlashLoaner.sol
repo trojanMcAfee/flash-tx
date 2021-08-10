@@ -39,6 +39,7 @@ contract FlashLoaner {
     IBancorNetwork bancorNetwork = IBancorNetwork(IContractRegistry(ContractRegistry_Bancor).addressOf('BancorNetwork'));
     IBalancerV1 balancerWBTCETHpool_1 = IBalancerV1(0x221BF20c2Ad9e5d7eC8a9d1991d8E2EdcfCb9d6c);
     IBalancerV1 balancerWBTCETHpool_2 = IBalancerV1(0x1efF8aF5D577060BA4ac8A29A13525bb0Ee2A3D5);
+    IBalancerV1 balancerETHUSDCpool = IBalancerV1(0x8a649274E4d777FFC6851F13d23A86BBFA2f2Fbf);
     IDODOProxyV2 dodoProxyV2 = IDODOProxyV2(0xa356867fDCEa8e71AEaF87805808803806231FdC);
     IExchange0xV2 exchange0xV2 = IExchange0xV2(0x080bf510FCbF18b91105470639e9561022937712);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
@@ -78,11 +79,13 @@ contract FlashLoaner {
 
     address swaper0x;
     address revengeOfTheFlash;
+    address offchainRelayer;
 
 
-    constructor(address _swaper0x, address _revengeOfTheFlash) {
+    constructor(address _swaper0x, address _revengeOfTheFlash, address _offchainRelayer) {
         swaper0x = _swaper0x;
         revengeOfTheFlash = _revengeOfTheFlash;
+        offchainRelayer = _offchainRelayer;
     }
 
 
@@ -118,7 +121,7 @@ contract FlashLoaner {
 
         //0x
         //(USDC to BNT)
-        USDC.transfer(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9, 11184.9175 * 10 ** 6);
+        USDC.transfer(offchainRelayer, 11184.9175 * 10 ** 6);
         (bool success, bytes memory returnData) = swaper0x.call(
             abi.encodeWithSignature(
                 'withdrawFromPool(address,address,uint256)', 

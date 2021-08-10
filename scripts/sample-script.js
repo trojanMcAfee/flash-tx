@@ -13,6 +13,7 @@ const soloMarginAddr = legos.dydx.soloMargin.address;
 const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'; 
 const wbtcAdr = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const bntAddr = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C';
+const offchainRelayer = '0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9';
 const borrowed = parseEther('6478.183133980298798568');
 let value;
 
@@ -55,7 +56,7 @@ async function main() {
       Helpers: helpers.address
     }
   });
-  const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address);
+  const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address, offchainRelayer);
   await flashlogic.deployed();
   await flashlogic.setExchange(swaper0x.address);
   console.log('flashlogic deployed to: ', flashlogic.address);
@@ -84,7 +85,6 @@ async function main() {
   //** impersonating..... */
   const IBNT = await hre.ethers.getContractAt('MyIERC20', bntAddr);
   const IWBTC = await hre.ethers.getContractAt('MyIERC20', wbtcAdr);
-  const offchainRelayer = '0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9';
 
   await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
@@ -102,6 +102,8 @@ async function main() {
   await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('253.071556591057205072'));
   //5th swap (USDT to WETH - transfer WETH)
   await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('239.890714288415882321'));
+  //6th swap (USDC to WETH - transfer WETH)
+  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('231.15052891491875094'));
 
 
   await hre.network.provider.request({

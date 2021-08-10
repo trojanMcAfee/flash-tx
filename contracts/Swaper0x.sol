@@ -40,6 +40,7 @@ contract Swaper0x {
     IBancorNetwork bancorNetwork;
     IBalancerV1 balancerWBTCETHpool_1;
     IBalancerV1 balancerWBTCETHpool_2;
+    IBalancerV1 balancerETHUSDCpool;
     IDODOProxyV2 dodoProxyV2;
     IExchange0xV2 exchange0xV2;
     ICroDefiSwapRouter02 croDefiRouter;
