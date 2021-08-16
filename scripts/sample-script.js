@@ -35,7 +35,11 @@ async function main() {
   console.log('Helpers deployed to: ', helpers.address);
 
   //Deploys the Swaper0x contract
-  const Swaper0x = await hre.ethers.getContractFactory('Swaper0x');
+  const Swaper0x = await hre.ethers.getContractFactory('Swaper0x', {
+    libraries: {
+      Helpers: helpers.address
+    }
+  });
   const swaper0x = await Swaper0x.deploy();
   await swaper0x.deployed();
   console.log('Swaper0x deployed to: ', swaper0x.address);
@@ -51,11 +55,12 @@ async function main() {
   console.log('Revenge Of The Flash deployed to: ', revengeOfTheFlash.address);
 
   //Deploys the logic contract (and links the Helpers library to it)
-  const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner', {
-    libraries: {
-      Helpers: helpers.address
-    }
-  });
+  // const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner', {
+  //   libraries: {
+  //     Helpers: helpers.address
+  //   }
+  // });
+  const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
   const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address, offchainRelayer);
   await flashlogic.deployed();
   await flashlogic.setExchange(swaper0x.address);

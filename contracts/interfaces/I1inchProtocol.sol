@@ -6,7 +6,7 @@ import './MyIERC20.sol';
 
 interface I1inchProtocol {
     function getExpectedReturn(
-        MyIERC20 fromToken,
+        address fromToken,
         MyIERC20 destToken,
         uint256 amount,
         uint256 parts,
@@ -36,7 +36,7 @@ interface I1inchProtocol {
         );
 
     function swap(
-        MyIERC20 fromToken,
+        address fromToken,
         MyIERC20 destToken,
         uint256 amount,
         uint256 minReturn,

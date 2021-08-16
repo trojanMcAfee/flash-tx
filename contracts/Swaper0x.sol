@@ -12,6 +12,7 @@ import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import './interfaces/IDODOProxyV2.sol';
 import './interfaces/ICroDefiSwapRouter02.sol';
+import './libraries/MySafeERC20.sol';
 
 
 import './libraries/Helpers.sol';
@@ -28,7 +29,7 @@ contract Swaper0x {
     MyIERC20 USDC;
     MyIERC20 BNT;
     MyIERC20 TUSD;
-    MyIERC20 ETH_Bancor;
+    MyIERC20 ETH;
     IWETH WETH_int;
     MyILendingPool lendingPoolAAVE;
     IContractRegistry ContractRegistry_Bancor;
@@ -45,6 +46,7 @@ contract Swaper0x {
     IExchange0xV2 exchange0xV2;
     ICroDefiSwapRouter02 croDefiRouter;
     Swaper0x exchange;
+    MyIERC20 aWETH;
 
 
     struct FillResults {
@@ -105,6 +107,18 @@ contract Swaper0x {
         }
         require(success, 'SWAP_CALL_FAILED');
     }
+    
+    
+
+
+    function bancorSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {
+        MyIERC20[] memory path = bancorNetwork.conversionPath(_tokenIn, _tokenOut);
+        uint minReturn = bancorNetwork.rateByPath(path, _amount);
+        _tokenIn.approve(address(bancorNetwork), _amount);
+        uint amountTraded = bancorNetwork.convertByPath(path, _amount, minReturn, address(this), address(0x0), 0);
+        return amountTraded;
+    }
+
 
 
     function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
@@ -129,21 +143,42 @@ contract Swaper0x {
 
 
 
-    function oneInchSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
-        _tokenIn.approve(address(oneInch), type(uint).max);
+    // function oneInchSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
+    //     _tokenIn.approve(address(oneInch), type(uint).max);
 
-        (uint expectedReturn, uint[] memory _distribution) = oneInch.getExpectedReturn(
-            _tokenIn,
-            _tokenOut,
+    //     (uint expectedReturn, uint[] memory _distribution) = oneInch.getExpectedReturn(
+    //         _tokenIn,
+    //         _tokenOut,
+    //         _amount,
+    //         10,
+    //         0
+    //     );
+    //     oneInch.swap(_tokenIn, _tokenOut, _amount, 0, _distribution, 0);
+
+    //     return expectedReturn;
+    // }
+
+
+
+
+    function sushiUniCro_swap(
+        ICroDefiSwapRouter02 _router, 
+        uint _amount, 
+        MyIERC20 _tokenIn, 
+        MyIERC20 _tokenOut
+    ) external returns(uint) {
+        MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
+        address[] memory path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
+
+        uint[] memory tradedAmounts =_router.swapExactTokensForTokens(
             _amount,
-            10,
-            0
+            0,
+            path,
+            address(this),
+            block.timestamp
         );
-        oneInch.swap(_tokenIn, _tokenOut, _amount, 0, _distribution, 0);
-
-        return expectedReturn;
+        return tradedAmounts[1];
     }
-
 
 
 
@@ -153,8 +188,8 @@ contract Swaper0x {
         MyIERC20 _tokenIn, 
         MyIERC20 _tokenOut, 
         uint _dir
-    ) private returns(uint) {
-        _tokenIn.approve(address(_router), type(uint).max);
+    ) external returns(uint) {
+        MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
         address[] memory _path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
         uint[] memory tradedAmounts = 
             _dir == 1 
@@ -182,6 +217,27 @@ contract Swaper0x {
 
         return tradedAmount;
     }
+
+
+    function curveSwap(
+        ICurve _pool,
+        MyIERC20 _tokenIn, 
+        uint _amountTokenIn, 
+        int128 _numTokenIn, 
+        int128 _numTokenOut,
+        uint _dir
+    ) external {
+        _tokenIn.approve(address(_pool), _amountTokenIn);
+        _dir == 1
+            ?
+        _pool.exchange_underlying(_numTokenIn, _numTokenOut, _amountTokenIn, 1)
+            :
+        _pool.exchange(_numTokenIn, _numTokenOut, _amountTokenIn, 1);
+    }
+
+
+
+    
 
 
 

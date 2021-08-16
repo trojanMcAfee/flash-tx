@@ -1,5 +1,10 @@
-// // SPDX-License-Identifier: Unlicense
+//SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
+
+
+import '../libraries/DataTypesAAVE.sol';
+
+
 
 interface MyILendingPool {
 
@@ -18,7 +23,15 @@ interface MyILendingPool {
     address onBehalfOf
   ) external;
 
-  function paused() external view returns (bool);
-  function getReservesList() external view returns (address[] memory);
+  function withdraw(
+    address asset,
+    uint256 amount,
+    address to
+  ) external returns (uint256);
+
+
+  function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
+
+
 
 }
