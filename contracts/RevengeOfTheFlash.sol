@@ -19,6 +19,7 @@ import './libraries/DataTypesAAVE.sol';
 import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
 import './interfaces/IAaveProtocolDataProvider.sol';
 import './interfaces/IAToken.sol';
+import './interfaces/IETHgateway.sol';
 
 import "hardhat/console.sol";
 
@@ -143,7 +144,7 @@ contract RevengeOfTheFlash {
         console.log('11.- WBTC received after swap (DODO): ', tradedAmount / 10 ** 8, '--', tradedAmount);
 
 
-        // 0x - (USDC to WBTC) - (using -deprecated- 1Inch protocol) 
+        // 0x - (USDC to WBTC) -  
         USDC.transfer(offchainRelayer, 984272.740048 * 10 ** 6);
         (bool _success, bytes memory _returnData) = swaper0x.call(
             abi.encodeWithSignature(
@@ -163,7 +164,7 @@ contract RevengeOfTheFlash {
 
 
         // BALANCER
-        //(1st WBTC/ETH swap)
+        //(1st WBTC to ETH swap)
         tradedAmount = balancerSwapV1(balancerWBTCETHpool_1, 1.74806084 * 10 ** 8, WBTC, WETH);
         console.log('13.- Amount of WETH received (1st Balancer swap): ', tradedAmount / 1 ether);
         console.log('___13.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
@@ -218,33 +219,33 @@ contract RevengeOfTheFlash {
 
         // UNISWAP - (USDT to ETH)
         tradedAmount = sushiUniCro_swap(uniswapRouter, 2894323.648676 * 10 ** 6, USDT, WETH, 1);
-        console.log('21. - UNISWAP --- ETH: ', tradedAmount / 1 ether);
+        console.log('22. - UNISWAP --- ETH: ', tradedAmount / 1 ether);
 
         // CRO Protocol (USDC to WETH)
         tradedAmount = sushiUniCro_swap(croDefiRouter, 100664.257504  * 10 ** 6, USDC, WETH);
-        console.log('22.- CRO Protocol --- WETH: ', tradedAmount / 1 ether);
+        console.log('23.- CRO Protocol --- WETH: ', tradedAmount / 1 ether);
 
         // BALANCER - (USDC to ETH)
         tradedAmount = balancerSwapV1(balancerETHUSDCpool, 100664.257505 * 10 ** 6, USDC, WETH);
-        console.log('23.- BALANCER --- ETH: ', tradedAmount / 1 ether);
+        console.log('24.- BALANCER --- ETH: ', tradedAmount / 1 ether);
 
         // DODO - (USDC to WETH)
         address WETHUSDC_DODO_pool = 0x75c23271661d9d143DCb617222BC4BEc783eff34;
         tradedAmount = dodoSwapV1(WETHUSDC_DODO_pool, USDC, WETH, 704649.802534 * 10 ** 6);
-        console.log('24.- DODO --- WETH: ', tradedAmount / 1 ether);
+        console.log('25.- DODO --- WETH: ', tradedAmount / 1 ether);
 
         // 0x - (USDC to WETH) *****
         USDC.transfer(offchainRelayer, 905978.317545 * 10 ** 6);
         tradedAmount = exchange.withdrawFromPool(WETH, address(this), 231.15052891491875094 * 1 ether);
-        console.log('25.- 0x (MyExchange) --- WETH: ', tradedAmount / 1 ether);
+        console.log('26.- 0x (MyExchange) --- WETH: ', tradedAmount / 1 ether);
 
         // UNISWAP - (USDC to ETH)
         tradedAmount = sushiUniCro_swap(uniswapRouter, 2818599.21014 * 10 ** 6, USDC, WETH, 1);
-        console.log('26.- UNISWAP --- ETH: ', tradedAmount / 1 ether);
+        console.log('27.- UNISWAP --- ETH: ', tradedAmount / 1 ether);
 
         // SUSHISWAP - (USDC to ETH)
         tradedAmount = sushiUniCro_swap(sushiRouter, 3422584.755171 * 10 ** 6, USDC, WETH, 1);
-        console.log('27.- SUSHISWAP --- ETH: ', tradedAmount / 1 ether);
+        console.log('28.- SUSHISWAP --- ETH: ', tradedAmount / 1 ether);
 
         // Convert to ETH the remainder of WETH
         WETH_int.deposit{value: address(this).balance}();
@@ -252,7 +253,7 @@ contract RevengeOfTheFlash {
         // console.log('28.- WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
         // console.log('28.- ETH balance: ', address(this).balance / 1 ether);
         // aWETH 0x030bA81f1c18d280636F32af80b9AAd02Cf0854e
-        console.log('28.- WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
+        console.log('29.- WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
 
         // 1Inch Protocol
         // tradedAmount = oneInchSwap(address(0), USDC, address(this).balance);
@@ -262,6 +263,12 @@ contract RevengeOfTheFlash {
         lendingPoolAAVE.deposit(address(WETH), WETH.balanceOf(address(this)), address(this), 0);
         // console.log('hi');
         // lendingPoolAAVE.withdraw(address(WETH), 6478.183133980298798568 * 1 ether, address(this));
+        // lendingPoolAAVE.borrow(address(WETH), 6478.183133980298798568 * 1 ether, 1, 0, address(this));
+
+        // IETHgateway ethGateway = IETHgateway(0xcc9a0B7c43DC2a5F023Bb9b738E45B0Ef6B06E04);
+        // ethGateway.depositETH{value: address(this).balance}(address(lendingPoolAAVE), address(this), 0);
+        // ethGateway.withdrawETH(address(lendingPoolAAVE), 6478 * 1 ether, address(this));
+
 
         IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
         (uint a, uint b, uint c, uint d, uint e, uint f, uint g, uint40 h, bool i) =  aaveProtocolDataProvider.getUserReserveData(address(WETH), address(this));

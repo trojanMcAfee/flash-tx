@@ -17,6 +17,7 @@ import './libraries/Helpers.sol';
 import './Swaper0x.sol'; 
 
 // import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
+import './interfaces/IConnectAAVE.sol';
 
 import "hardhat/console.sol";
 
@@ -46,8 +47,8 @@ contract FlashLoaner {
     IExchange0xV2 exchange0xV2 = IExchange0xV2(0x080bf510FCbF18b91105470639e9561022937712);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
     Swaper0x exchange;
-    MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e);
-
+    MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); //0x541dCd3F00Bcd1A683cc73E1b2A8693b602201f4
+    
 
     struct FillResults {
         uint256 makerAssetFilledAmount;  
@@ -137,13 +138,22 @@ contract FlashLoaner {
         uint tradedAmount;
 
 
+        // WETH_int.withdraw(WETH.balanceOf(address(this)));
+        // IConnectAAVE connectAave = IConnectAAVE(0x53Edf7Fc8bB9c249694EA0a2174043553b34Db27);
+        // connectAave.deposit{value: 6478183133980298798568}(address(ETH), address(this).balance, 0, 0);
+        // console.log('aweth balance: ', aWETH.balanceOf(address(this)));
+        // connectAave.withdraw(address(USDC), 1789 * 10 ** 6, 0, 0);
+        // console.log('USDC balance****: ', USDC.balanceOf(address(this)));
+        // revert();
+
         //AAVE
         uint aaveUSDCloan = 17895868 * 10 ** 6;
         WETH.approve(address(lendingPoolAAVE), type(uint).max); 
         lendingPoolAAVE.deposit(address(WETH), _borrowed, address(this), 0); 
         console.log('2.- Deposit WETH to Aave: ', _borrowed / 1 ether);
 
-        lendingPoolAAVE.borrow(address(USDC), aaveUSDCloan, 1, 0, address(this)); 
+        lendingPoolAAVE.borrow(address(USDC), aaveUSDCloan, 1, 0, address(this));
+        // lendingPoolAAVE.withdraw(address(USDC), aaveUSDCloan, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
 
