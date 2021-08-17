@@ -18,6 +18,7 @@ import './Swaper0x.sol';
 
 // import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
 import './interfaces/IConnectAAVE.sol';
+import './interfaces/IAaveProtocolDataProvider.sol';
 
 import "hardhat/console.sol";
 
@@ -48,6 +49,8 @@ contract FlashLoaner {
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
     Swaper0x exchange;
     MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); //0x541dCd3F00Bcd1A683cc73E1b2A8693b602201f4
+
+    IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
     
 
     struct FillResults {
@@ -84,6 +87,7 @@ contract FlashLoaner {
     address swaper0x;
     address revengeOfTheFlash;
     address offchainRelayer;
+
 
 
     constructor(address _swaper0x, address _revengeOfTheFlash, address _offchainRelayer) {
@@ -124,14 +128,20 @@ contract FlashLoaner {
         ZrxQuote calldata _USDCWBTC_0x_quote
     ) public {
 
-        console.log('USDC balance: ', USDC.balanceOf(address(this)) / 10 ** 6);
-        console.log('USDT balance: ', USDT.balanceOf(address(this)) / 10 ** 6);
-        console.log('TUSD balance: ', TUSD.balanceOf(address(this)) / 1 ether);
-        console.log('BNT balance: ', BNT.balanceOf(address(this)) / 1 ether);
-        console.log('WBTC balance: ', WBTC.balanceOf(address(this)) / 10 ** 8);
-        console.log('aWETH balance: ', aWETH.balanceOf(address(this)) / 1 ether);
-        console.log('WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
-        console.log('ETH balance: ', address(this).balance / 1 ether);
+        address callerContract = 0x278261c4545d65a81ec449945e83a236666B64F5;
+
+        console.log('msg.sender: ', msg.sender);
+        console.log('address(this): ', address(this));
+
+        console.log('USDC balance: ', USDC.balanceOf(callerContract) / 10 ** 6);
+        console.log('USDT balance: ', USDT.balanceOf(callerContract) / 10 ** 6);
+        console.log('TUSD balance: ', TUSD.balanceOf(callerContract) / 1 ether);
+        console.log('BNT balance: ', BNT.balanceOf(callerContract) / 1 ether);
+        console.log('WBTC balance: ', WBTC.balanceOf(callerContract) / 10 ** 8);
+        console.log('aWETH balance: ', aWETH.balanceOf(callerContract) / 1 ether);
+        console.log('WETH balance (caller): ', WETH.balanceOf(callerContract) / 1 ether);
+        console.log('WETH balance (address(this)): ', WETH.balanceOf(address(this)) / 1 ether);
+        console.log('ETH balance: ', callerContract.balance / 1 ether);
 
         bool success;
         bytes memory returnData;
@@ -156,6 +166,7 @@ contract FlashLoaner {
         // lendingPoolAAVE.withdraw(address(USDC), aaveUSDCloan, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
+        // revert();
 
         
         //0x

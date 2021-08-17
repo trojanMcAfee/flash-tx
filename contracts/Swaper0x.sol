@@ -14,6 +14,10 @@ import './interfaces/IDODOProxyV2.sol';
 import './interfaces/ICroDefiSwapRouter02.sol';
 import './libraries/MySafeERC20.sol';
 
+import './libraries/DataTypesAAVE.sol';
+import './interfaces/IAaveProtocolDataProvider.sol';
+import './interfaces/IDebtTokenAAVE/IStableDebtToken.sol';
+
 
 import './libraries/Helpers.sol';
 
@@ -47,6 +51,8 @@ contract Swaper0x {
     ICroDefiSwapRouter02 croDefiRouter;
     Swaper0x exchange;
     MyIERC20 aWETH;
+
+    IAaveProtocolDataProvider aaveProtocolDataProvider;
 
 
     struct FillResults {
@@ -85,6 +91,21 @@ contract Swaper0x {
     address revengeOfTheFlash;
 
     receive() external payable {}
+
+    // function getHello(address _x) external view {
+    //     console.log(_x);
+    // }
+
+
+    function delegateCredit(address _borrower) external {
+        address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
+        (, address stableDebtToken, ) = aaveProtocolDataProvider.getReserveTokensAddresses(USDC);
+
+        IStableDebtToken(stableDebtToken).approveDelegation(_borrower, type(uint).max);
+    }
+
+
 
     function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external returns(uint) {
         _tokenOut.transfer(_recipient, _amountTokenOut);

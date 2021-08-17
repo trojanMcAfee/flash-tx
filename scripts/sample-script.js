@@ -22,7 +22,7 @@ let value;
 
 
 async function main() {
-  const provider = hre.ethers.provider;
+  // const provider = hre.ethers.provider;
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
   console.log('Deployers address: ', signerAddr);
@@ -171,7 +171,62 @@ async function main() {
   const USDCWBTC_0x_quote = await getQuote('USDC', 'WBTC', 984272 * 10 ** 6);                                     
   quotes_addr_0x[2] = USDCWBTC_0x_quote.addresses;
   quotes_bytes_0x[2] = USDCWBTC_0x_quote.bytes;
+
+
+  /***** 2nd impersonating *****/
+  
+  // const callerContract = '0x278261c4545d65a81ec449945e83a236666B64F5';
+
+  // //send ETH for paying the fees
+  // let value2 = parseEther('0.1');
+  // await signer.sendTransaction({
+  //   value: value2,
+  //   to: callerContract
+  // }); 
+
+  // value2 = parseEther('6478');
+  // await signer.sendTransaction({
+  //   value: value2,
+  //   to: callerContract
+  // }); 
+
+
+  // await hre.network.provider.request({
+  //   method: "hardhat_impersonateAccount",
+  //   params: [callerContract],
+  // });
+
+  // const callerSign = await ethers.getSigner(callerContract);
                                         
+  // // await dxdxFlashloaner.connect(callerSign).initiateFlashLoan(
+  // //   soloMarginAddr, 
+  // //   wethAddr, 
+  // //   borrowed,
+  // //   quotes_addr_0x,
+  // //   quotes_bytes_0x
+  // // );
+
+  // const callerBalance = formatEther(await callerSign.getBalance());
+  // console.log('balance: ', callerBalance);
+  // const iETHgateway = await hre.ethers.getContractAt('IETHgateway', '0xcc9a0B7c43DC2a5F023Bb9b738E45B0Ef6B06E04');
+  // await iETHgateway.connect(callerSign).depositETH('0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9', callerContract, 0, {value: parseEther('6477')});
+
+  // const lendingPoolAave = await hre.ethers.getContractAt('MyILendingPool', '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9');
+  // const tx = await lendingPoolAave.connect(callerSign).withdraw('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 17895868 * 10 ** 6, callerContract);
+  // const receipt = await tx.wait();
+  // console.log('receipt: ', receipt);
+  
+
+  // // await swaper0x.connect(callerSign).delegateCredit(dxdxFlashloaner.address);
+
+  // await hre.network.provider.request({
+  //   method: "hardhat_stopImpersonatingAccount",
+  //   params: [offchainRelayer],
+  // });
+
+//**** end of 2nd impersonating ****/
+
+
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
@@ -179,15 +234,6 @@ async function main() {
     quotes_addr_0x,
     quotes_bytes_0x
   );
-
-
-  // await dxdxFlashloaner.initiateFlashLoan(
-  //   soloMarginAddr, 
-  //   wethAddr, 
-  //   borrowed,
-  //   quoteAddr,
-  //   quote.data
-  // );
 
 
 }

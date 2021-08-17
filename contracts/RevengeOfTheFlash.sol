@@ -14,8 +14,8 @@ import './interfaces/I1inchProtocol.sol';
 import './Swaper0x.sol';
 import './libraries/MySafeERC20.sol';
 import './interfaces/ICroDefiSwapRouter02.sol';
-import './libraries/DataTypesAAVE.sol';
 
+import './libraries/DataTypesAAVE.sol';
 import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
 import './interfaces/IAaveProtocolDataProvider.sol';
 import './interfaces/IAToken.sol';
@@ -52,6 +52,8 @@ contract RevengeOfTheFlash {
     ICroDefiSwapRouter02 croDefiRouter;
     Swaper0x exchange;
     MyIERC20 aWETH;
+
+    IAaveProtocolDataProvider aaveProtocolDataProvider;
 
 
 
@@ -270,8 +272,8 @@ contract RevengeOfTheFlash {
         // ethGateway.withdrawETH(address(lendingPoolAAVE), 6478 * 1 ether, address(this));
 
 
-        IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
-        (uint a, uint b, uint c, uint d, uint e, uint f, uint g, uint40 h, bool i) =  aaveProtocolDataProvider.getUserReserveData(address(WETH), address(this));
+        // IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
+        (uint a, uint b, uint c, uint d, uint e, uint f, uint g, uint40 h, bool i) =  aaveProtocolDataProvider.getUserReserveData(address(USDC), 0x278261c4545d65a81ec449945e83a236666B64F5);
         
         console.log(a);
         console.log(b);
@@ -321,6 +323,9 @@ contract RevengeOfTheFlash {
         // 1007154214720821951861628637 index
 
     }
+
+
+    
 
 
 
