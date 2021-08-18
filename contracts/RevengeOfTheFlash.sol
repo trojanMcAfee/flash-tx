@@ -19,7 +19,7 @@ import './libraries/DataTypesAAVE.sol';
 import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
 import './interfaces/IAaveProtocolDataProvider.sol';
 import './interfaces/IAToken.sol';
-import './interfaces/IETHgateway.sol';
+import './interfaces/IWETHgateway.sol';
 
 import "hardhat/console.sol";
 
@@ -267,7 +267,7 @@ contract RevengeOfTheFlash {
         // lendingPoolAAVE.withdraw(address(WETH), 6478.183133980298798568 * 1 ether, address(this));
         // lendingPoolAAVE.borrow(address(WETH), 6478.183133980298798568 * 1 ether, 1, 0, address(this));
 
-        // IETHgateway ethGateway = IETHgateway(0xcc9a0B7c43DC2a5F023Bb9b738E45B0Ef6B06E04);
+        // IWETHgateway ethGateway = IWETHgateway(0xcc9a0B7c43DC2a5F023Bb9b738E45B0Ef6B06E04);
         // ethGateway.depositETH{value: address(this).balance}(address(lendingPoolAAVE), address(this), 0);
         // ethGateway.withdrawETH(address(lendingPoolAAVE), 6478 * 1 ether, address(this));
 

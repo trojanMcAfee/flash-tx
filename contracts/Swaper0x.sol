@@ -92,17 +92,30 @@ contract Swaper0x {
 
     receive() external payable {}
 
-    // function getHello(address _x) external view {
-    //     console.log(_x);
+    event UserHealthFactor(uint hf);
+
+
+
+    // function delegateCredit(address _borrower) external {
+    //     address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    //     IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
+    //     (, address stableDebtToken, ) = aaveProtocolDataProvider.getReserveTokensAddresses(USDC);
+
+    //     IStableDebtToken(stableDebtToken).approveDelegation(_borrower, type(uint).max);
     // }
 
-
-    function delegateCredit(address _borrower) external {
-        address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    function getUserData_aave(address _asset, address _user) external {
         IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
-        (, address stableDebtToken, ) = aaveProtocolDataProvider.getReserveTokensAddresses(USDC);
+        () = aaveProtocolDataProvider.getUserReserveData(_asset, _user);
+    } //finish this function, then go to sample-script...
 
-        IStableDebtToken(stableDebtToken).approveDelegation(_borrower, type(uint).max);
+    
+
+
+    function getUserHealthFactor_aave(address _user) external {
+        MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
+        (, , , , , uint healthFactor) = lendingPoolAAVE.getUserAccountData(_user);
+        emit UserHealthFactor(healthFactor);
     }
 
 
