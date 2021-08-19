@@ -104,10 +104,11 @@ contract Swaper0x {
     //     IStableDebtToken(stableDebtToken).approveDelegation(_borrower, type(uint).max);
     // }
 
-    function getUserData_aave(address _asset, address _user) external {
-        IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
-        () = aaveProtocolDataProvider.getUserReserveData(_asset, _user);
-    } //finish this function, then go to sample-script...
+    // function getUserData_aave(address _asset, address _user) external returns(uint) {
+    //     IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
+    //     (uint a, uint b, uint variableDebt, uint d, uint e, uint f, uint g, uint40 h, bool i) = aaveProtocolDataProvider.getUserReserveData(_asset, _user);
+    //     return variableDebt;
+    // } 
 
     
 

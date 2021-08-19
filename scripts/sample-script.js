@@ -6,6 +6,7 @@ const { generatePseudoRandomSalt, Order, signatureUtils } = require('@0x/order-u
 
 
 const { createQueryString, API_QUOTE_URL, getQuote, getQuote2 } = require('./relayer.js');
+const { beginManagement } = require('./health-factor.js');
 const { parseEther, parseUnits, formatEther, defaultAbiCoder } = ethers.utils;
 const { MaxUint256 } = ethers.constants;
 
@@ -92,110 +93,13 @@ async function main() {
 
   console.log('--------------------------- Health Factor Management (AAVE) ---------------------------');
   console.log('.');
+
+  await beginManagement(signer, swaper0x, wethAddr, flashlogic);
+
+  console.log('.');
+  console.log('---------------------------------- Swaps ----------------------------------');
+  console.log('.');
   
-  const usdcToBorrow = 17895868 * 10 ** 6;
-
-  const aaveDataProviderAddr = '0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d';
-  const aaveDataProvider = await hre.ethers.getContractAt('IAaveProtocolDataProvider', aaveDataProviderAddr);
-  let tx = await aaveDataProvider.getUserReserveData(usdcAddr, callerContract);
-  const borrowedUSDC = tx[2].toString();
-  
-  tx = await swaper0x.getUserHealthFactor_aave(callerContract);
-  let receipt = await tx.wait();
-  let callerHF = await getHealthFactor(receipt);
-  console.log("Caller's health factor pre-ETH deposit: ", callerHF);
-
-  //Sends ETH to original Caller for paying the fees of withdrawing USDC from lending pool
-  await signer.sendTransaction({
-    value: parseEther('0.1'),
-    to: callerContract
-  }); 
-
-  //Sends ETH to original caller which will be used to increase healh factor
-  value = parseEther('4505.879348962757498457');
-  await signer.sendTransaction({
-    value,
-    to: callerContract
-  }); 
-  
-  //Trades USDC for the borrowed amount made by the caller
-  const uniswapRouter = await hre.ethers.getContractAt('IUniswapV2Router02', uniswapRouterAddr);
-  const path = [wethAddr, usdcAddr];
-  await uniswapRouter.swapETHForExactTokens(borrowedUSDC, path, flashlogic.address, MaxUint256, {
-    value: parseEther('5100')
-  });
-
-
-
-  await hre.network.provider.request({  
-    method: "hardhat_impersonateAccount",
-    params: [callerContract],
-  });
-  
-  const callerSign = await ethers.getSigner(callerContract);
-  const IWETHgateway = await hre.ethers.getContractAt('IWETHgateway', '0xcc9a0B7c43DC2a5F023Bb9b738E45B0Ef6B06E04');
-  const lendingPoolAave = await hre.ethers.getContractAt('MyILendingPool', lendingPoolAaveAddr);
-
-  //Deposit ETH in lending pool to increase health factor (caller)
-  await IWETHgateway.connect(callerSign).depositETH(lendingPoolAaveAddr, callerContract, 0, { value });
-  tx = await swaper0x.getUserHealthFactor_aave(callerContract);
-  receipt = await tx.wait();
-  callerHF = await getHealthFactor(receipt);
-  console.log("Caller's health factor after ETH deposit: ", callerHF);
-
-  //Withdraw USDC from lending pool and send them to Flashlogic
-  await lendingPoolAave.connect(callerSign).withdraw(usdcAddr, usdcToBorrow, flashlogic.address);
-
-  await hre.network.provider.request({
-    method: "hardhat_stopImpersonatingAccount",
-    params: [offchainRelayer],
-  });
-
-  
-  
-  //Impersonates Flashlogic for making the deposit to the lending pool
-  await hre.network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [flashlogic.address],
-  });
-  
-  const flashlogicSign = await ethers.getSigner(flashlogic.address);
-  
-  //Sends ETH for paying the fees for depositing into the lending pool
-  await signer.sendTransaction({
-    value: parseEther('0.1'),
-    to: flashlogic.address
-  });
-  
-  const burnerAddr = '0x0000000000000000000000000000000000000000';
-  
-  console.log('hi');
-  const IUSDC = await hre.ethers.getContractAt('MyIERC20', usdcAddr);
-  const totalUSDCdeposit = usdcToBorrow + Number(borrowedUSDC);
-
-  await IUSDC.connect(flashlogicSign).approve(lendingPoolAaveAddr, totalUSDCdeposit);
-  await lendingPoolAave.connect(flashlogicSign).deposit(usdcAddr, totalUSDCdeposit, flashlogic.address, 0);
-  console.log('h2');
-  await lendingPoolAave.connect(flashlogicSign).borrow(usdcAddr, borrowedUSDC, 2, 0, flashlogic.address);
-  IUSDC.connect(flashlogicSign).transfer(burnerAddr, Number(borrowedUSDC));
-
-  await hre.network.provider.request({
-    method: "hardhat_stopImpersonatingAccount",
-    params: [flashlogic.address],
-  });
-
- //...get the original caller's userData (before depositing the ETH and with the USD)
- //put it in the beginning, get flashlogic's data, put it here and compare it both
-
-  // tx = await swaper0x.getUserHealthFactor_aave(flashlogic.address);
-  // receipt = await tx.wait();
-  // callerHF = await getHealthFactor(receipt);
-  // console.log("Caller's health factor after ETH deposit: ", callerHF);
-  
-
-
-  console.log('--------------------------- ---------------- ---------------------------');
-
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
   const IWETH = await hre.ethers.getContractAt('IWETH', wethAddr);
   value = parseUnits('2', "gwei"); //gwei
@@ -295,71 +199,21 @@ async function main() {
   quotes_bytes_0x[2] = USDCWBTC_0x_quote.bytes;
 
 
-  /***** 2nd impersonating *****/
   
 
-  // //send ETH for paying the fees
-  // let value2 = parseEther('0.1');
-  // await signer.sendTransaction({
-  //   value: value2,
-  //   to: callerContract
-  // }); 
-
-  // value2 = parseEther('6478');
-  // await signer.sendTransaction({
-  //   value: value2,
-  //   to: callerContract
-  // }); 
-
-
-  // await hre.network.provider.request({
-  //   method: "hardhat_impersonateAccount",
-  //   params: [callerContract],
-  // });
-
-  // const callerSign = await ethers.getSigner(callerContract);
-                                        
-  // await dxdxFlashloaner.connect(callerSign).initiateFlashLoan(
-  //   soloMarginAddr, 
-  //   wethAddr, 
-  //   borrowed,
-  //   quotes_addr_0x,
-  //   quotes_bytes_0x
-  // );
-
-  // const callerBalance = formatEther(await callerSign.getBalance());
-  // console.log('balance: ', callerBalance);
-  // const IWETHgateway = await hre.ethers.getContractAt('IWETHgateway', '0xcc9a0B7c43DC2a5F023Bb9b738E45B0Ef6B06E04');
-  // await IWETHgateway.connect(callerSign).depositETH('0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9', callerContract, 0, {value: parseEther('6477')});
-
-  // const lendingPoolAave = await hre.ethers.getContractAt('MyILendingPool', '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9');
-  // const tx = await lendingPoolAave.connect(callerSign).withdraw('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 17895868 * 10 ** 6, callerContract);
-  // const receipt = await tx.wait();
-  // console.log('receipt: ', receipt);
-  
-
-  // // await swaper0x.connect(callerSign).delegateCredit(dxdxFlashloaner.address);
-
-  // await hre.network.provider.request({
-  //   method: "hardhat_stopImpersonatingAccount",
-  //   params: [offchainRelayer],
-  // });
-
-//**** end of 2nd impersonating ****/
 
 
 
 
 
 
-
-  // await dxdxFlashloaner.initiateFlashLoan(
-  //   soloMarginAddr, 
-  //   wethAddr, 
-  //   borrowed,
-  //   quotes_addr_0x,
-  //   quotes_bytes_0x
-  // );
+  await dxdxFlashloaner.initiateFlashLoan(
+    soloMarginAddr, 
+    wethAddr, 
+    borrowed,
+    quotes_addr_0x,
+    quotes_bytes_0x
+  );
 
 
 }

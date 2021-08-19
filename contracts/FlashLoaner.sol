@@ -130,8 +130,7 @@ contract FlashLoaner {
 
         address callerContract = 0x278261c4545d65a81ec449945e83a236666B64F5;
 
-        console.log('msg.sender: ', msg.sender);
-        console.log('address(this): ', address(this));
+
 
         console.log('USDC balance: ', USDC.balanceOf(callerContract) / 10 ** 6);
         console.log('USDT balance: ', USDT.balanceOf(callerContract) / 10 ** 6);
@@ -148,25 +147,16 @@ contract FlashLoaner {
         uint tradedAmount;
 
 
-        // WETH_int.withdraw(WETH.balanceOf(address(this)));
-        // IConnectAAVE connectAave = IConnectAAVE(0x53Edf7Fc8bB9c249694EA0a2174043553b34Db27);
-        // connectAave.deposit{value: 6478183133980298798568}(address(ETH), address(this).balance, 0, 0);
-        // console.log('aweth balance: ', aWETH.balanceOf(address(this)));
-        // connectAave.withdraw(address(USDC), 1789 * 10 ** 6, 0, 0);
-        // console.log('USDC balance****: ', USDC.balanceOf(address(this)));
-        // revert();
-
         //AAVE
-        uint aaveUSDCloan = 17895868 * 10 ** 6;
+        uint usdcWithdrawal = 17895868 * 10 ** 6;
         WETH.approve(address(lendingPoolAAVE), type(uint).max); 
         lendingPoolAAVE.deposit(address(WETH), _borrowed, address(this), 0); 
         console.log('2.- Deposit WETH to Aave: ', _borrowed / 1 ether);
 
-        lendingPoolAAVE.borrow(address(USDC), aaveUSDCloan, 1, 0, address(this));
-        // lendingPoolAAVE.withdraw(address(USDC), aaveUSDCloan, address(this)); 
+        // lendingPoolAAVE.borrow(address(USDC), usdcWithdrawal, 1, 0, address(this));
+        lendingPoolAAVE.withdraw(address(USDC), usdcWithdrawal, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
-        // revert();
 
         
         //0x
