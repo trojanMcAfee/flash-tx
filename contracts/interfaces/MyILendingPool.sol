@@ -43,7 +43,6 @@ interface MyILendingPool {
       uint256 healthFactor
     );
 
-  //show in the beginning the healfactor and userdata of the caller
-  // exchange some ETH to USDC and transfer it to flashlogic so it can deposit it
+
 
 }

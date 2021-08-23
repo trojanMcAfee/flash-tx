@@ -6,7 +6,7 @@ const { generatePseudoRandomSalt, Order, signatureUtils } = require('@0x/order-u
 
 
 const { createQueryString, API_QUOTE_URL, getQuote, getQuote2 } = require('./relayer.js');
-const { beginManagement } = require('./health-factor.js');
+const { beginManagement, getHealthFactor, getUserData } = require('./health-factor.js');
 const { parseEther, parseUnits, formatEther, defaultAbiCoder } = ethers.utils;
 const { MaxUint256 } = ethers.constants;
 
@@ -15,25 +15,29 @@ const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const wbtcAdr = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const bntAddr = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C';
 const offchainRelayer = '0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9';
+const aUSDCAddr = '0xBcca60bB61934080951369a648Fb03DF4F96263C';
+const aWethAddr = '0x030bA81f1c18d280636F32af80b9AAd02Cf0854e';
 const callerContract = '0x278261c4545d65a81ec449945e83a236666B64F5';
 const lendingPoolAaveAddr = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
 const usdcAddr = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
+const usdtAddr = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 const borrowed = parseEther('6478.183133980298798568');
 let value;
 
-
-async function getHealthFactor(_receipt) {
-  const { data } = _receipt.logs[0];
-  const decodedData = defaultAbiCoder.decode(["uint256"], data);
-  return formatEther(decodedData.toString());
-}
 
 
 
 
 
 async function main() {
+
+  const usdcData_caller = await getUserData(usdcAddr, callerContract, 10 ** 6);
+  const usdtData_caller = await getUserData(usdtAddr, callerContract, 10 ** 6);
+  const wethData_caller = await getUserData(wethAddr, callerContract, 10 ** 18);
+  
+
+
   console.log('--------------------------- Deployed contracts ---------------------------');
   console.log('.');
   const provider = hre.ethers.provider;
@@ -91,15 +95,15 @@ async function main() {
 
 
 
-  console.log('--------------------------- Health Factor Management (AAVE) ---------------------------');
+  console.log("--------------------------- Health Factor Management (AAVE's Lending Pool) ---------------------------");
   console.log('.');
 
-  await beginManagement(signer, swaper0x, wethAddr, flashlogic);
+  await beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller);  
 
   console.log('.');
   console.log('---------------------------------- Swaps ----------------------------------');
   console.log('.');
-  
+
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
   const IWETH = await hre.ethers.getContractAt('IWETH', wethAddr);
   value = parseUnits('2', "gwei"); //gwei
@@ -202,8 +206,23 @@ async function main() {
   
 
 
+  // await getUserData(usdcAddr, flashlogic.address, 'flashlogic', 10 ** 6);
+
+  // await getUserData('0xdAC17F958D2ee523a2206206994597C13D831ec7', callerContract, 'caller', 10 ** 6);
+
+  const IUSDC = await hre.ethers.getContractAt('MyIERC20', usdcAddr);
+  // const path = [wethAddr, usdcAddr];
+  const IRouter = await hre.ethers.getContractAt('IUniswapV2Router02', uniswapRouterAddr);
+  // await IRouter.swapExactETHForTokens(1, path, signerAddr, MaxUint256, {
+  //   value: parseEther('376')
+  // });
+  // console.log('signer USDC balance: ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
 
 
+  // await IRouter.swapExactTokensForETH(1, path, signerAddr, MaxUint256, {
+  //   value: parseEther('376')
+  // });
+  // console.log('signer USDC balance: ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
 
 
 
@@ -214,6 +233,73 @@ async function main() {
     quotes_addr_0x,
     quotes_bytes_0x
   );
+
+  console.log('.');
+  console.log('---------------------------------- Profits ----------------------------------');
+  console.log('.');
+
+  console.log('Before conversion: ');
+
+  const wethBalance_dydxFlashloaner = formatEther(await IWETH.balanceOf(dxdxFlashloaner.address));
+  console.log('WETH balance dydx flashloaner: ', wethBalance_dydxFlashloaner);
+
+  const wethBalance_flashlogic = formatEther(await IWETH.balanceOf(flashlogic.address));
+  console.log('WETH balance Flashlogic: ', wethBalance_flashlogic);
+
+  const hf = await getHealthFactor(flashlogic.address, swaper0x);
+  console.log('flashlogic health factor: ', hf);
+
+  const IaUSDC = await hre.ethers.getContractAt('MyIERC20', aUSDCAddr);
+  console.log('flashlogic aUSDC balance: ', Number((await IaUSDC.balanceOf(flashlogic.address)).toString()) / 10 ** 6);
+
+  const IaWETH = await hre.ethers.getContractAt('MyIERC20', aWethAddr);
+  console.log('flashlogic aWETH balance: ', formatEther(await IaWETH.balanceOf(flashlogic.address)));
+
+  // const IUSDC = await hre.ethers.getContractAt('MyIERC20', usdcAddr);
+  console.log('flashlogic USDC balance: ', (await IUSDC.balanceOf(flashlogic.address)).toString() / 10 ** 6);
+
+
+  await signer.sendTransaction({
+    value: parseEther('0.1'),
+    to: dxdxFlashloaner.address
+  });
+
+
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: [dxdxFlashloaner.address],
+  });
+  const dydxSign = await ethers.getSigner(dxdxFlashloaner.address);
+
+  const wethBalance = await IWETH.connect(dydxSign).balanceOf(dxdxFlashloaner.address);
+  const path = [wethAddr, usdcAddr];
+  const IWETH_erc20 = await hre.ethers.getContractAt('MyIERC20', wethAddr);
+  await IWETH_erc20.connect(dydxSign).approve(uniswapRouterAddr, MaxUint256);
+  await IRouter.connect(dydxSign).swapExactTokensForTokens(wethBalance, 1, path, signerAddr, MaxUint256);
+
+
+  await hre.network.provider.request({
+    method: "hardhat_stopImpersonatingAccount",
+    params: [dxdxFlashloaner.address],
+  });
+
+  console.log('TOTAL PROFITS - USDC balance signer address: ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
+
+
+  
+
+
+// function swapExactTokensForTokens(
+//   uint amountIn,
+//   uint amountOutMin,
+//   address[] calldata path,
+//   address to,
+// //   uint deadline
+
+
+
+
+
 
 
 }

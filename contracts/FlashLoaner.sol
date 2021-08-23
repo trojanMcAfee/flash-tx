@@ -48,7 +48,8 @@ contract FlashLoaner {
     IExchange0xV2 exchange0xV2 = IExchange0xV2(0x080bf510FCbF18b91105470639e9561022937712);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
     Swaper0x exchange;
-    MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); //0x541dCd3F00Bcd1A683cc73E1b2A8693b602201f4
+    MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); 
+    MyIERC20 aUSDC = MyIERC20(0xBcca60bB61934080951369a648Fb03DF4F96263C);
 
     IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
     
@@ -130,17 +131,30 @@ contract FlashLoaner {
 
         address callerContract = 0x278261c4545d65a81ec449945e83a236666B64F5;
 
-
-
-        console.log('USDC balance: ', USDC.balanceOf(callerContract) / 10 ** 6);
-        console.log('USDT balance: ', USDT.balanceOf(callerContract) / 10 ** 6);
-        console.log('TUSD balance: ', TUSD.balanceOf(callerContract) / 1 ether);
-        console.log('BNT balance: ', BNT.balanceOf(callerContract) / 1 ether);
-        console.log('WBTC balance: ', WBTC.balanceOf(callerContract) / 10 ** 8);
-        console.log('aWETH balance: ', aWETH.balanceOf(callerContract) / 1 ether);
+        console.log('.');
+        console.log('*** caller ***');
+        console.log('USDC balance (caller): ', USDC.balanceOf(callerContract) / 10 ** 6);
+        console.log('USDT balance (caller): ', USDT.balanceOf(callerContract) / 10 ** 6);
+        console.log('TUSD balance (caller): ', TUSD.balanceOf(callerContract) / 1 ether);
+        console.log('BNT balance (caller): ', BNT.balanceOf(callerContract) / 1 ether);
+        console.log('WBTC balance (caller): ', WBTC.balanceOf(callerContract) / 10 ** 8);
         console.log('WETH balance (caller): ', WETH.balanceOf(callerContract) / 1 ether);
-        console.log('WETH balance (address(this)): ', WETH.balanceOf(address(this)) / 1 ether);
-        console.log('ETH balance: ', callerContract.balance / 1 ether);
+        console.log('ETH balance (caller): ', callerContract.balance / 1 ether);
+        console.log('aWETH balance (caller): ', aWETH.balanceOf(callerContract) / 1 ether);
+        console.log('aUSDC balance (caller): ', aUSDC.balanceOf(callerContract) / 10 ** 6);
+
+        console.log('.');
+
+        console.log('*** flashlogic ***');
+        console.log('USDC balance: ', USDC.balanceOf(address(this)) / 10 ** 6);
+        console.log('USDT balance: ', USDT.balanceOf(address(this)) / 10 ** 6);
+        console.log('TUSD balance: ', TUSD.balanceOf(address(this)) / 1 ether);
+        console.log('BNT balance: ', BNT.balanceOf(address(this)) / 1 ether);
+        console.log('WBTC balance: ', WBTC.balanceOf(address(this)) / 10 ** 8);
+        console.log('WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
+        console.log('ETH balance: ', address(this).balance / 1 ether);
+        console.log('aWETH balance: ', aWETH.balanceOf(address(this)) / 1 ether);
+        console.log('aUSDC balance: ', aUSDC.balanceOf(address(this)) / 10 ** 6);
 
         bool success;
         bytes memory returnData;
@@ -156,7 +170,18 @@ contract FlashLoaner {
         // lendingPoolAAVE.borrow(address(USDC), usdcWithdrawal, 1, 0, address(this));
         lendingPoolAAVE.withdraw(address(USDC), usdcWithdrawal, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
-        console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
+        console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6);
+
+        
+        //  tradedAmount = swapToExchange(
+        //     abi.encodeWithSignature(
+        //         'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+        //         uniswapRouter, USDC.balanceOf(address(this)), USDC, WETH, 1
+        //     ), 
+        //     'Sushiswap TUSD/ETH'
+        // );
+        // console.log('***** ETH balance: ', address(this).balance / 1 ether);
+        // revert();
 
         
         //0x

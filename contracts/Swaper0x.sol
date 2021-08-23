@@ -51,6 +51,7 @@ contract Swaper0x {
     ICroDefiSwapRouter02 croDefiRouter;
     Swaper0x exchange;
     MyIERC20 aWETH;
+    MyIERC20 aUSDC;
 
     IAaveProtocolDataProvider aaveProtocolDataProvider;
 

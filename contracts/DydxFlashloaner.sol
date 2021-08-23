@@ -86,6 +86,8 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
         executeCall(USDCBNT_0x_quote, TUSDWETH_0x_quote, USDCWBTC_0x_quote); 
     }
 
+    function() external payable {}
+
 
     function executeCall(
         ZrxQuote memory _USDCBNT_0x_quote, 
