@@ -234,6 +234,7 @@ async function main() {
     quotes_bytes_0x
   );
 
+
   console.log('.');
   console.log('---------------------------------- Profits ----------------------------------');
   console.log('.');
@@ -286,15 +287,11 @@ async function main() {
   console.log('TOTAL PROFITS - USDC balance signer address: ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
 
 
+  await swaper0x.getUserData_aave(flashlogic.address);
+
+
   
 
-
-// function swapExactTokensForTokens(
-//   uint amountIn,
-//   uint amountOutMin,
-//   address[] calldata path,
-//   address to,
-// //   uint deadline
 
 
 

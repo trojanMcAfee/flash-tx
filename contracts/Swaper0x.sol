@@ -111,6 +111,20 @@ contract Swaper0x {
     //     return variableDebt;
     // } 
 
+    function getUserData_aave(address _user) external view {
+        MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
+        (uint a, uint b, uint c, uint d, uint e, uint f) = lendingPoolAAVE.getUserAccountData(_user);
+
+        console.log('totalCollateralETH: ', a / 1 ether);
+        console.log('totalDebtETH: ', b / 1 ether);
+        console.log('availableBorrowsETH: ', c / 1 ether);
+        console.log('currentLiquidationThreshold: ', d);
+        console.log('ltv: ', e);
+        console.log('healthFactor: ', f / 1 ether);
+
+        
+    }
+
     
 
 

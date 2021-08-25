@@ -141,6 +141,11 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     //Spends amount equally to original caller's debt (both in USDC and USDT) in order to match their health factor
     await IUSDC.connect(flashlogicSign).transfer(burnerAddr, Number(callerBorrowedUSDC));
     await IUSDT.connect(flashlogicSign).transfer(burnerAddr, usdtCallerDebt);
+
+    // console.log('**********************');
+    // await lendingPoolAave.connect(flashlogicSign).withdraw(wethAddr, parseEther('10'), flashlogic.address);
+    // await swaper0x.getUserData_aave(flashlogic.address);
+    // console.log('**********************');
     
     //Stops impersonating Flashlogic
     await hre.network.provider.request({
@@ -205,6 +210,9 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     console.log('aWETH balance: ', wethData_flashlogic.aBalance);
     console.log('Current Variable Debt: ', wethData_flashlogic.currentVariableDebt);
     console.log('Scaled Variable Debt: ', wethData_flashlogic.scaledVariableDebt);
+
+
+    
 
 }
 

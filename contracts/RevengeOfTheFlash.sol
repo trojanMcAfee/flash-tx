@@ -317,7 +317,7 @@ contract RevengeOfTheFlash {
 
 
 
-        lendingPoolAAVE.withdraw(address(WETH), 1120 * 1 ether, address(this));
+        // lendingPoolAAVE.withdraw(address(WETH), 1120 * 1 ether, address(this));
         
         WETH.transferFrom(address(this), msg.sender, WETH.balanceOf(address(this)));
         console.log('msg.sender: ', msg.sender);
