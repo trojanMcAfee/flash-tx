@@ -105,25 +105,29 @@ contract Swaper0x {
     //     IStableDebtToken(stableDebtToken).approveDelegation(_borrower, type(uint).max);
     // }
 
-    // function getUserData_aave(address _asset, address _user) external returns(uint) {
+    // function getUserAccountData_aave(address _asset, address _user) external returns(uint) {
     //     IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
     //     (uint a, uint b, uint variableDebt, uint d, uint e, uint f, uint g, uint40 h, bool i) = aaveProtocolDataProvider.getUserReserveData(_asset, _user);
     //     return variableDebt;
     // } 
 
-    function getUserData_aave(address _user) external view {
-        MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
-        (uint a, uint b, uint c, uint d, uint e, uint f) = lendingPoolAAVE.getUserAccountData(_user);
+    // function getHello() external view {
+    //     console.log('hellooo');
+    // }
 
-        console.log('totalCollateralETH: ', a / 1 ether);
-        console.log('totalDebtETH: ', b / 1 ether);
-        console.log('availableBorrowsETH: ', c / 1 ether);
-        console.log('currentLiquidationThreshold: ', d);
-        console.log('ltv: ', e);
-        console.log('healthFactor: ', f / 1 ether);
+    // function getUserAccountData_aave(address _user) external view {
+    //     MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
+    //     (uint a, uint b, uint c, uint d, uint e, uint f) = lendingPoolAAVE.getUserAccountData(_user);
+
+    //     console.log('totalCollateralETH: ', a / 1 ether);
+    //     console.log('totalDebtETH: ', b / 1 ether);
+    //     console.log('availableBorrowsETH: ', c / 1 ether);
+    //     console.log('currentLiquidationThreshold: ', d);
+    //     console.log('ltv: ', e);
+    //     console.log('healthFactor: ', f / 1 ether);
 
         
-    }
+    // }
 
     
 

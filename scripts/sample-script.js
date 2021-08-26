@@ -2,11 +2,13 @@ const { legos } = require("@studydefi/money-legos");
 // const uniRouterABI = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json').abi;
 const fetch = require("node-fetch");
 const { generatePseudoRandomSalt, Order, signatureUtils } = require('@0x/order-utils');
+require('dotenv').config();
 
 
 
 const { createQueryString, API_QUOTE_URL, getQuote, getQuote2 } = require('./relayer.js');
-const { beginManagement, getHealthFactor, getUserData } = require('./health-factor.js');
+const { beginManagement, getHealthFactor, getUserReserveData_aave } = require('./health-factor.js');
+const { showsCallersData, getUserAccountData_aave } = require('./callers-post-flash.js');
 const { parseEther, parseUnits, formatEther, defaultAbiCoder } = ethers.utils;
 const { MaxUint256 } = ethers.constants;
 
@@ -22,8 +24,24 @@ const lendingPoolAaveAddr = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
 const usdcAddr = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 const usdtAddr = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const aUsdtAddr = '0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811';
+const tusdAddr = '0x0000000000085d4780B73119b644AE5ecd22b376';
 const borrowed = parseEther('6478.183133980298798568');
 let value;
+
+const org_msgSender = '0x4cb2b6dcb8da65f8421fed3d44e0828e07594a60';
+const org_callerContract = '0x278261c4545d65a81ec449945e83a236666B64F5';
+const org_logicContract = '0xb3c9669a5706477a2b237d98edb9b57678926f04';
+const org_dYdX_flashloaner = '0x691d4172331a11912c6d0e6d1a002e3d7ced6a66';
+
+
+// async function getUserAccountData_aave(user) {
+//   // const lendingPoolAaveAddr = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
+//   const ILendingPool = await hre.ethers.getContractAt('MyILendingPool', '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9');
+//   const tx = await ILendingPool.getUserAccountData(user);
+//   console.log('********: ', tx);
+
+// }
 
 
 
@@ -32,15 +50,44 @@ let value;
 
 async function main() {
 
-  const usdcData_caller = await getUserData(usdcAddr, callerContract, 10 ** 6);
-  const usdtData_caller = await getUserData(usdtAddr, callerContract, 10 ** 6);
-  const wethData_caller = await getUserData(wethAddr, callerContract, 10 ** 18);
+  const provider = hre.ethers.provider;
+
+  //ERC20 interfaces
+  const IUSDC = await hre.ethers.getContractAt('MyIERC20', usdcAddr);
+  const IaUSDC = await hre.ethers.getContractAt('MyIERC20', aUSDCAddr);
+  const IUSDT = await hre.ethers.getContractAt('MyIERC20', usdtAddr);
+  const IaUSDT = await hre.ethers.getContractAt('MyIERC20', aUsdtAddr);
+  const IWETH = await hre.ethers.getContractAt('IWETH', wethAddr);
+  const IaWETH = await hre.ethers.getContractAt('MyIERC20', aWethAddr);
+  const IBNT = await hre.ethers.getContractAt('MyIERC20', bntAddr);
+  const IWBTC = await hre.ethers.getContractAt('MyIERC20', wbtcAdr);
+  const ITUSD = await hre.ethers.getContractAt('MyIERC20', tusdAddr);
+
+
+  async function logsBalances(user) {
+    console.log('USDC balance: ', (await IUSDC.balanceOf(user)).toString() / 10 ** 6);
+    console.log('aUSDC balance: ', (await IaUSDC.balanceOf(user)).toString() / 10 ** 6);
+    console.log('USDT balance: ', (await IUSDT.balanceOf(user)).toString() / 10 ** 6);
+    console.log('aUSDT balance: ', (await IaUSDT.balanceOf(user)).toString() / 10 ** 6);
+    console.log('ETH balance: ', Number(formatEther(await hre.ethers.provider.getBalance(user))));
+    console.log('WETH balance: ', (await IWETH.balanceOf(user)).toString() / 10 ** 18);
+    console.log('aWETH balance: ', (await IaWETH.balanceOf(user)).toString() / 10 ** 18);
+    console.log('WBTC balance: ', (await IWBTC.balanceOf(user)).toString() / 10 ** 8);
+    console.log('TUSD balance: ', (await ITUSD.balanceOf(user)).toString() / 10 ** 18);
+    console.log('BNT balance: ', (await IBNT.balanceOf(user)).toString() / 10 ** 18);
+}
+
+
+
+
+  const usdcData_caller = await getUserReserveData_aave(usdcAddr, callerContract, 10 ** 6);
+  const usdtData_caller = await getUserReserveData_aave(usdtAddr, callerContract, 10 ** 6);
+  const wethData_caller = await getUserReserveData_aave(wethAddr, callerContract, 10 ** 18);
   
 
 
-  console.log('--------------------------- Deployed contracts ---------------------------');
+  console.log('--------------------------- My deployed contracts ---------------------------');
   console.log('.');
-  const provider = hre.ethers.provider;
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
   console.log('Deployers address: ', signerAddr);
@@ -105,7 +152,7 @@ async function main() {
   console.log('.');
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
-  const IWETH = await hre.ethers.getContractAt('IWETH', wethAddr);
+  
   value = parseUnits('2', "gwei"); //gwei
   await IWETH.deposit({ value });
   await IWETH.transfer(dxdxFlashloaner.address, value);
@@ -118,8 +165,6 @@ async function main() {
 
 
   //** impersonating..... */
-  const IBNT = await hre.ethers.getContractAt('MyIERC20', bntAddr);
-  const IWBTC = await hre.ethers.getContractAt('MyIERC20', wbtcAdr);
 
   await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
@@ -206,11 +251,11 @@ async function main() {
   
 
 
-  // await getUserData(usdcAddr, flashlogic.address, 'flashlogic', 10 ** 6);
+  // await getUserReserveData_aave(usdcAddr, flashlogic.address, 'flashlogic', 10 ** 6);
 
-  // await getUserData('0xdAC17F958D2ee523a2206206994597C13D831ec7', callerContract, 'caller', 10 ** 6);
+  // await getUserReserveData_aave('0xdAC17F958D2ee523a2206206994597C13D831ec7', callerContract, 'caller', 10 ** 6);
 
-  const IUSDC = await hre.ethers.getContractAt('MyIERC20', usdcAddr);
+  
   // const path = [wethAddr, usdcAddr];
   const IRouter = await hre.ethers.getContractAt('IUniswapV2Router02', uniswapRouterAddr);
   // await IRouter.swapExactETHForTokens(1, path, signerAddr, MaxUint256, {
@@ -236,28 +281,10 @@ async function main() {
 
 
   console.log('.');
-  console.log('---------------------------------- Profits ----------------------------------');
+  console.log('---------------------------------- State of my contracts Post-Flash ----------------------------------');
   console.log('.');
 
-  console.log('Before conversion: ');
-
-  const wethBalance_dydxFlashloaner = formatEther(await IWETH.balanceOf(dxdxFlashloaner.address));
-  console.log('WETH balance dydx flashloaner: ', wethBalance_dydxFlashloaner);
-
-  const wethBalance_flashlogic = formatEther(await IWETH.balanceOf(flashlogic.address));
-  console.log('WETH balance Flashlogic: ', wethBalance_flashlogic);
-
-  const hf = await getHealthFactor(flashlogic.address, swaper0x);
-  console.log('flashlogic health factor: ', hf);
-
-  const IaUSDC = await hre.ethers.getContractAt('MyIERC20', aUSDCAddr);
-  console.log('flashlogic aUSDC balance: ', Number((await IaUSDC.balanceOf(flashlogic.address)).toString()) / 10 ** 6);
-
-  const IaWETH = await hre.ethers.getContractAt('MyIERC20', aWethAddr);
-  console.log('flashlogic aWETH balance: ', formatEther(await IaWETH.balanceOf(flashlogic.address)));
-
-  // const IUSDC = await hre.ethers.getContractAt('MyIERC20', usdcAddr);
-  console.log('flashlogic USDC balance: ', (await IUSDC.balanceOf(flashlogic.address)).toString() / 10 ** 6);
+  await showsCallersData(logsBalances, flashlogic.address, signerAddr, dxdxFlashloaner.address);
 
 
   await signer.sendTransaction({
@@ -284,10 +311,31 @@ async function main() {
     params: [dxdxFlashloaner.address],
   });
 
-  console.log('TOTAL PROFITS - USDC balance signer address: ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
+  console.log('.');
+  console.log('****** TOTAL PROFITS in USDC (signer address): ****** ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
 
 
-  await swaper0x.getUserData_aave(flashlogic.address);
+
+
+  console.log('--------------------------- State of main origin contracts Post-Flash ---------------------------');
+  console.log('.');
+
+  //Resets the fork to the block before the flashloan
+  await network.provider.request({
+    method: "hardhat_reset",
+    params: [
+      {
+        forking: {
+          jsonRpcUrl: process.env.ALCHEMY_URL,
+          blockNumber: 12431520,
+        },
+      },
+    ],
+  });
+
+
+  await showsCallersData(logsBalances, org_callerContract, org_msgSender, org_dYdX_flashloaner, org_logicContract);
+
 
 
   

@@ -22,7 +22,7 @@ async function getHealthFactor(user, swaper0x) {
 
 
 
-async function getUserData(asset, user, decimals) {
+async function getUserReserveData_aave(asset, user, decimals) {
     const aaveDataProviderAddr = '0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d';
     const aaveDataProvider = await hre.ethers.getContractAt('IAaveProtocolDataProvider', aaveDataProviderAddr);
     const result =  await aaveDataProvider.getUserReserveData(asset, user);
@@ -144,7 +144,7 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
 
     // console.log('**********************');
     // await lendingPoolAave.connect(flashlogicSign).withdraw(wethAddr, parseEther('10'), flashlogic.address);
-    // await swaper0x.getUserData_aave(flashlogic.address);
+    // await swaper0x.getUserAccountData_aave(flashlogic.address);
     // console.log('**********************');
     
     //Stops impersonating Flashlogic
@@ -183,8 +183,8 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
 
     console.log('.');
 
-    const usdcData_flashlogic = await getUserData(usdcAddr, flashlogic.address, 10 ** 6);
-    const usdtData_flashlogic = await getUserData(usdtAddr, flashlogic.address, 10 ** 6);
+    const usdcData_flashlogic = await getUserReserveData_aave(usdcAddr, flashlogic.address, 10 ** 6);
+    const usdtData_flashlogic = await getUserReserveData_aave(usdtAddr, flashlogic.address, 10 ** 6);
 
     console.log("** Flashlogic's USDC/USDT debt state (after management and before flashloan) **");
     console.log('aUSDC balance: ', usdcData_flashlogic.aBalance);
@@ -205,7 +205,7 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     
     console.log('.');
 
-    const wethData_flashlogic = await getUserData(wethAddr, flashlogic.address, 10 ** 18);
+    const wethData_flashlogic = await getUserReserveData_aave(wethAddr, flashlogic.address, 10 ** 18);
     console.log('WETH data state flashlogic:');
     console.log('aWETH balance: ', wethData_flashlogic.aBalance);
     console.log('Current Variable Debt: ', wethData_flashlogic.currentVariableDebt);
@@ -220,5 +220,5 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
 module.exports = {
     beginManagement,
     getHealthFactor,
-    getUserData
+    getUserReserveData_aave
 }
