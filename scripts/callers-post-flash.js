@@ -1,10 +1,4 @@
 const { formatEther } = ethers.utils;
-// const { getHealthFactor } = require('./health-factor.js');
-
-// const org_msgSender = '0x4cb2b6dcb8da65f8421fed3d44e0828e07594a60';
-// const org_callerContract = '0x278261c4545d65a81ec449945e83a236666B64F5';
-// const org_logicContract = '0xb3c9669a5706477a2b237d98edb9b57678926f04';
-// const org_dYdX_flashloaner = '0x691d4172331a11912c6d0e6d1a002e3d7ced6a66';
 
 
 async function getUserAccountData_aave(user) {
@@ -50,9 +44,6 @@ async function showsCallersData(logsBalances, callerContract, msgSender, dYdX_fl
     }
     console.log('Balances of dydx Flashloaner: ', dYdX_flashloaner);
     await logsBalances(dYdX_flashloaner);
-
-
-
 }
 
 

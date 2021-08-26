@@ -159,58 +159,45 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     flashlogicBorrowedUSDC = tx[2].toString();
     flashlogicATokenBalance_usdc = tx[0].toString();
     
-    const flashlogicHealthFactor = await getHealthFactor(flashlogic.address, swaper0x);
-
-    //Logs debt and health factor values
-    // console.log('USDC debt of original Caller Contract with lending pool: ', callerBorrowedUSDC);
-    // console.log('aUSDC balance of original Caller Contract: ', callerAtokenBalance_usdc);
-    // console.log('USDC debt of Flashlogic with lending pool: ', flashlogicBorrowedUSDC);
-    // console.log('aUSDC balance of Flashlogic: ', flashlogicATokenBalance_usdc);
-    // console.log("Flashlogic's health factor after movements (forbids USDC withdrawals): ", flashlogicHealthFactor);
-
-    // console.log('.');
-
-    console.log("** Caller's USDC/USDT debt state (before flashloan) **");
+    
+    //Caller's USDC/USDT/WETH debt state (before flashloan)
+    console.log("*** Caller's USDC/USDT/WETH debt state (before flashloan) ***");
     console.log('aUSDC balance: ', usdcData_caller.aBalance);
-    console.log('Current Variable Debt: ', usdcData_caller.currentVariableDebt);
-    console.log('Scaled Variable Debt: ', usdcData_caller.scaledVariableDebt);
-    // console.log(".");
+    console.log('Current Variable Debt (usdc): ', usdcData_caller.currentVariableDebt);
+    console.log('Scaled Variable Debt (usdc): ', usdcData_caller.scaledVariableDebt);
+    
     console.log('aUSDT balance: ', usdtData_caller.aBalance);
-    console.log('Current Variable Debt: ', usdtData_caller.currentVariableDebt);
-    console.log('Scaled Variable Debt: ', usdtData_caller.scaledVariableDebt);
+    console.log('Current Variable Debt (usdt): ', usdtData_caller.currentVariableDebt);
+    console.log('Scaled Variable Debt (usdt): ', usdtData_caller.scaledVariableDebt);
+
+    console.log('aWETH balance: ', wethData_caller.aBalance);
+    console.log('Current Variable Debt (weth): ', wethData_caller.currentVariableDebt);
+    console.log('Scaled Variable Debt (weth): ', wethData_caller.scaledVariableDebt);
 
     console.log("Caller's health factor pre-ETH deposit (forbids USDC withdrawal): ", Number(callerHealthFactor_preDeposit));
 
     console.log('.');
 
+    //Flashlogic's USDC/USDT/WETH debt state (after management and before flashloan)
     const usdcData_flashlogic = await getUserReserveData_aave(usdcAddr, flashlogic.address, 10 ** 6);
     const usdtData_flashlogic = await getUserReserveData_aave(usdtAddr, flashlogic.address, 10 ** 6);
 
-    console.log("** Flashlogic's USDC/USDT debt state (after management and before flashloan) **");
+    console.log("*** Flashlogic's USDC/USDT/WETH debt state (after management and before flashloan) ***");
     console.log('aUSDC balance: ', usdcData_flashlogic.aBalance);
     console.log('Current Variable Debt (usdc): ', usdcData_flashlogic.currentVariableDebt);
     console.log('Scaled Variable Debt (usdc): ', usdcData_flashlogic.scaledVariableDebt);
-    // console.log(".");
+    
     console.log('aUSDT balance: ', usdtData_flashlogic.aBalance);
     console.log('Current Variable Debt (usdt): ', usdtData_flashlogic.currentVariableDebt);
     console.log('Scaled Variable Debt (usdt): ', usdtData_flashlogic.scaledVariableDebt);
-
-    console.log("Flashlogic's health factor after movements (forbids USDC withdrawals): ", Number(flashlogicHealthFactor));
-
-    console.log('--------------');
-    console.log('WETH data state caller:');
-    console.log('aWETH balance: ', wethData_caller.aBalance);
-    console.log('Current Variable Debt: ', wethData_caller.currentVariableDebt);
-    console.log('Scaled Variable Debt: ', wethData_caller.scaledVariableDebt);
     
-    console.log('.');
-
     const wethData_flashlogic = await getUserReserveData_aave(wethAddr, flashlogic.address, 10 ** 18);
-    console.log('WETH data state flashlogic:');
     console.log('aWETH balance: ', wethData_flashlogic.aBalance);
-    console.log('Current Variable Debt: ', wethData_flashlogic.currentVariableDebt);
-    console.log('Scaled Variable Debt: ', wethData_flashlogic.scaledVariableDebt);
-
+    console.log('Current Variable Debt (weth): ', wethData_flashlogic.currentVariableDebt);
+    console.log('Scaled Variable Debt (weth): ', wethData_flashlogic.scaledVariableDebt);
+    
+    const flashlogicHealthFactor = await getHealthFactor(flashlogic.address, swaper0x);
+    console.log("Flashlogic's health factor after movements (forbids USDC withdrawals): ", Number(flashlogicHealthFactor));
 
     
 

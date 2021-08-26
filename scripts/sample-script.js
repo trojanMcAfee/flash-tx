@@ -51,6 +51,8 @@ const org_dYdX_flashloaner = '0x691d4172331a11912c6d0e6d1a002e3d7ced6a66';
 async function main() {
 
   const provider = hre.ethers.provider;
+  const orgBalanceETH = await provider.getBalance(org_msgSender);
+
 
   //ERC20 interfaces
   const IUSDC = await hre.ethers.getContractAt('MyIERC20', usdcAddr);
@@ -312,8 +314,8 @@ async function main() {
   });
 
   console.log('.');
-  console.log('****** TOTAL PROFITS in USDC (signer address): ****** ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
-
+  console.log('****** TOTAL PROFITS in USDC (signer address) ****** : ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
+  console.log('.');
 
 
 
@@ -333,6 +335,8 @@ async function main() {
     ],
   });
 
+  console.log('ETH balance of original msg.sender (pre-flashloan): ', formatEther(orgBalanceETH));
+  console.log('.');
 
   await showsCallersData(logsBalances, org_callerContract, org_msgSender, org_dYdX_flashloaner, org_logicContract);
 
