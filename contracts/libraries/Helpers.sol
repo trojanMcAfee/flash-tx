@@ -2,6 +2,8 @@
 pragma solidity >=0.5.0 <0.9.0;
 
 
+// import '../Swaper0x.sol';
+import "hardhat/console.sol";
 
 
 
@@ -27,6 +29,17 @@ library Helpers {
         path[1] = _token2;
         return path;
     }
+
+
+    // function swapToExchange(bytes memory _encodedData, string memory _swapDesc, Swaper0x swaper0x) external returns(uint tradedAmount) {
+    //     (bool success, bytes memory returnData) = swaper0x.delegatecall(_encodedData);
+    //     if (success && returnData.length > 0) {
+    //         (tradedAmount) = abi.decode(returnData, (uint256));
+    //     } else if (!success) {
+    //         console.log(Helpers._getRevertMsg(returnData), '--', _swapDesc, 'failed');
+    //         revert();
+    //     }
+    // }
 
 
     

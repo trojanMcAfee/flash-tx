@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+require('dotenv').config();
 
 module.exports = {
   solidity: {
@@ -20,12 +21,9 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: 'https://eth-mainnet.alchemyapi.io/v2/aHdZRYTN-8_SDXHT0gOEh4XtAuhT7E-W',
+        url: process.env.ALCHEMY_URL,
         blockNumber: 12431519
       }
-    },
-    mainnet: {
-      url: 'https://mainnet.infura.io/v3/ead605dd65704007ae941fffb7c1d1a7'
     }
   }
 };

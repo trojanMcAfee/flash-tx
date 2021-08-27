@@ -18,11 +18,15 @@ import './Swaper0x.sol';
 
 // import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
 import './interfaces/IConnectAAVE.sol';
+import './interfaces/IAaveProtocolDataProvider.sol';
 
 import "hardhat/console.sol";
 
 
 contract FlashLoaner {
+
+    // using Helpers for bytes;
+    // using Helpers for string;
 
     MyIERC20 USDT = MyIERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     MyIERC20 WBTC = MyIERC20(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
@@ -47,7 +51,10 @@ contract FlashLoaner {
     IExchange0xV2 exchange0xV2 = IExchange0xV2(0x080bf510FCbF18b91105470639e9561022937712);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
     Swaper0x exchange;
-    MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); //0x541dCd3F00Bcd1A683cc73E1b2A8693b602201f4
+    MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); 
+    MyIERC20 aUSDC = MyIERC20(0xBcca60bB61934080951369a648Fb03DF4F96263C);
+
+    IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
     
 
     struct FillResults {
@@ -86,6 +93,7 @@ contract FlashLoaner {
     address offchainRelayer;
 
 
+
     constructor(address _swaper0x, address _revengeOfTheFlash, address _offchainRelayer) {
         swaper0x = _swaper0x;
         revengeOfTheFlash = _revengeOfTheFlash;
@@ -104,15 +112,19 @@ contract FlashLoaner {
 
  
 
-    function swapToExchange(bytes memory _encodedData, string memory _swapDesc) private returns(uint tradedAmount) {
+    function swapToExchange(bytes memory _encodedData, string memory _swapDesc) public returns(uint) {
         (bool success, bytes memory returnData) = swaper0x.delegatecall(_encodedData);
         if (success && returnData.length > 0) {
-            (tradedAmount) = abi.decode(returnData, (uint256));
+            (uint tradedAmount) = abi.decode(returnData, (uint256));
+            return tradedAmount;
         } else if (!success) {
             console.log(Helpers._getRevertMsg(returnData), '--', _swapDesc, 'failed');
             revert();
         }
+    }
 
+    function getHello(uint256 _x) external view {
+        console.log(_x);
     }
 
 
@@ -124,38 +136,59 @@ contract FlashLoaner {
         ZrxQuote calldata _USDCWBTC_0x_quote
     ) public {
 
+        address callerContract = 0x278261c4545d65a81ec449945e83a236666B64F5;
+
+        console.log('.');
+        console.log('*** caller ***');
+        console.log('USDC balance (caller): ', USDC.balanceOf(callerContract) / 10 ** 6);
+        console.log('USDT balance (caller): ', USDT.balanceOf(callerContract) / 10 ** 6);
+        console.log('TUSD balance (caller): ', TUSD.balanceOf(callerContract) / 1 ether);
+        console.log('BNT balance (caller): ', BNT.balanceOf(callerContract) / 1 ether);
+        console.log('WBTC balance (caller): ', WBTC.balanceOf(callerContract) / 10 ** 8);
+        console.log('WETH balance (caller): ', WETH.balanceOf(callerContract) / 1 ether);
+        console.log('ETH balance (caller): ', callerContract.balance / 1 ether);
+        console.log('aWETH balance (caller): ', aWETH.balanceOf(callerContract) / 1 ether);
+        console.log('aUSDC balance (caller): ', aUSDC.balanceOf(callerContract) / 10 ** 6);
+
+        console.log('.');
+
+        console.log('*** flashlogic ***');
         console.log('USDC balance: ', USDC.balanceOf(address(this)) / 10 ** 6);
         console.log('USDT balance: ', USDT.balanceOf(address(this)) / 10 ** 6);
         console.log('TUSD balance: ', TUSD.balanceOf(address(this)) / 1 ether);
         console.log('BNT balance: ', BNT.balanceOf(address(this)) / 1 ether);
         console.log('WBTC balance: ', WBTC.balanceOf(address(this)) / 10 ** 8);
-        console.log('aWETH balance: ', aWETH.balanceOf(address(this)) / 1 ether);
         console.log('WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
         console.log('ETH balance: ', address(this).balance / 1 ether);
+        console.log('aWETH balance: ', aWETH.balanceOf(address(this)) / 1 ether);
+        console.log('aUSDC balance: ', aUSDC.balanceOf(address(this)) / 10 ** 6);
 
         bool success;
         bytes memory returnData;
         uint tradedAmount;
 
 
-        // WETH_int.withdraw(WETH.balanceOf(address(this)));
-        // IConnectAAVE connectAave = IConnectAAVE(0x53Edf7Fc8bB9c249694EA0a2174043553b34Db27);
-        // connectAave.deposit{value: 6478183133980298798568}(address(ETH), address(this).balance, 0, 0);
-        // console.log('aweth balance: ', aWETH.balanceOf(address(this)));
-        // connectAave.withdraw(address(USDC), 1789 * 10 ** 6, 0, 0);
-        // console.log('USDC balance****: ', USDC.balanceOf(address(this)));
-        // revert();
-
         //AAVE
-        uint aaveUSDCloan = 17895868 * 10 ** 6;
+        uint usdcWithdrawal = 17895868 * 10 ** 6;
         WETH.approve(address(lendingPoolAAVE), type(uint).max); 
         lendingPoolAAVE.deposit(address(WETH), _borrowed, address(this), 0); 
         console.log('2.- Deposit WETH to Aave: ', _borrowed / 1 ether);
 
-        lendingPoolAAVE.borrow(address(USDC), aaveUSDCloan, 1, 0, address(this));
-        // lendingPoolAAVE.withdraw(address(USDC), aaveUSDCloan, address(this)); 
+        // lendingPoolAAVE.borrow(address(USDC), usdcWithdrawal, 1, 0, address(this));
+        lendingPoolAAVE.withdraw(address(USDC), usdcWithdrawal, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
-        console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6); 
+        console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6);
+
+        
+        //  tradedAmount = swapToExchange(
+        //     abi.encodeWithSignature(
+        //         'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+        //         uniswapRouter, USDC.balanceOf(address(this)), USDC, WETH, 1
+        //     ), 
+        //     'Sushiswap TUSD/ETH'
+        // );
+        // console.log('***** ETH balance: ', address(this).balance / 1 ether);
+        // revert();
 
         
         //0x
@@ -232,9 +265,11 @@ contract FlashLoaner {
         console.log('8.- ETH traded (Sushiswap swap): ', tradedAmount / 1 ether, '--', tradedAmount);
 
         //Moving to Revenge
-        (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall(
-            abi.encodeWithSignature('executeCont((address,address,address,address,bytes))',
+        (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall( 
+            abi.encodeWithSignature(
+            'executeCont((address,address,address,address,bytes))', //'executeCont((address,address,address,address,bytes),function)',
              _TUSDWETH_0x_quote
+            //  bytes4(keccak256(abi.encodePacked('getHello(uint256)'))) 
             )
         );
         if (!_success) {
@@ -244,7 +279,11 @@ contract FlashLoaner {
 
     }
     
+// function (bytes memory, string memory) public returns(uint) swapToExchange
 
+// function getHello(uint _x) view {
+//         console.log(_x);
+//     }
 
 }
 
