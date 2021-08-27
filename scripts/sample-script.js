@@ -92,7 +92,7 @@ async function main() {
   console.log('.');
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
-  console.log('Deployers address: ', signerAddr);
+  console.log('Deployer address: ', signerAddr);
 
 
   //Deploy the Helpers library
@@ -112,6 +112,7 @@ async function main() {
   console.log('Swaper0x deployed to: ', swaper0x.address);
   
   //Deploys the 2nd part of the logic contract first
+  // const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash');
   const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash', {
     libraries: {
       Helpers: helpers.address

@@ -72,14 +72,26 @@ contract RevengeOfTheFlash {
     address offchainRelayer;
 
     
-    
-    
+    // function (bytes memory, string memory) external returns(uint) swapToExchange
+    // function (bytes, string) public returns(uint) swapToExchange
 
 
 
     function executeCont(
         ZrxQuote calldata _TUSDWETH_0x_quote
+        // function (uint256) external view getHello 
     ) public {
+
+        // console.log('++++++++ num +++++++');
+
+        // (bool succ, ) = address(this).call(abi.encodeWithSignature('getHello(uint256)', 26));
+        // require(succ);
+
+        // // getHello(25);
+
+        // console.log('hi');
+        // revert();
+
         //General variables
         uint tradedAmount;
         uint amountTokenOut;
@@ -181,7 +193,18 @@ contract RevengeOfTheFlash {
         tradedAmount = sushiUniCro_swap(uniswapRouter, 3.49612169 * 10 ** 8, WBTC, WETH, 1);
         console.log('15.- Amount of ETH received (Uniswap): ', tradedAmount / 1 ether);
 
-        // SUSHIWAP - (WBTC to ETH)
+        // SUSHIWAP - (WBTC to ETH) +++++++++++++
+
+        // tradedAmount = swapToExchange(
+        //     abi.encodeWithSignature(
+        //         'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+        //         sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1
+        //     ), 
+        //     'Sushiswap WBTC/ETH'
+        // );
+        
+
+
         tradedAmount = sushiUniCro_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
         console.log('16.- Amount of ETH received (Sushiswap): ', tradedAmount / 1 ether);
 

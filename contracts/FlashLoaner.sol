@@ -25,6 +25,9 @@ import "hardhat/console.sol";
 
 contract FlashLoaner {
 
+    // using Helpers for bytes;
+    // using Helpers for string;
+
     MyIERC20 USDT = MyIERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     MyIERC20 WBTC = MyIERC20(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     MyIERC20 WETH = MyIERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
@@ -109,15 +112,19 @@ contract FlashLoaner {
 
  
 
-    function swapToExchange(bytes memory _encodedData, string memory _swapDesc) private returns(uint tradedAmount) {
+    function swapToExchange(bytes memory _encodedData, string memory _swapDesc) public returns(uint) {
         (bool success, bytes memory returnData) = swaper0x.delegatecall(_encodedData);
         if (success && returnData.length > 0) {
-            (tradedAmount) = abi.decode(returnData, (uint256));
+            (uint tradedAmount) = abi.decode(returnData, (uint256));
+            return tradedAmount;
         } else if (!success) {
             console.log(Helpers._getRevertMsg(returnData), '--', _swapDesc, 'failed');
             revert();
         }
+    }
 
+    function getHello(uint256 _x) external view {
+        console.log(_x);
     }
 
 
@@ -258,9 +265,11 @@ contract FlashLoaner {
         console.log('8.- ETH traded (Sushiswap swap): ', tradedAmount / 1 ether, '--', tradedAmount);
 
         //Moving to Revenge
-        (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall(
-            abi.encodeWithSignature('executeCont((address,address,address,address,bytes))',
+        (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall( 
+            abi.encodeWithSignature(
+            'executeCont((address,address,address,address,bytes))', //'executeCont((address,address,address,address,bytes),function)',
              _TUSDWETH_0x_quote
+            //  bytes4(keccak256(abi.encodePacked('getHello(uint256)'))) 
             )
         );
         if (!_success) {
@@ -270,7 +279,11 @@ contract FlashLoaner {
 
     }
     
+// function (bytes memory, string memory) public returns(uint) swapToExchange
 
+// function getHello(uint _x) view {
+//         console.log(_x);
+//     }
 
 }
 
