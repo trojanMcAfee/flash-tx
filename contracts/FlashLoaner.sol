@@ -110,23 +110,6 @@ contract FlashLoaner {
     receive() external payable {}
 
 
- 
-
-    function swapToExchange(bytes memory _encodedData, string memory _swapDesc) public returns(uint) {
-        (bool success, bytes memory returnData) = swaper0x.delegatecall(_encodedData);
-        if (success && returnData.length > 0) {
-            (uint tradedAmount) = abi.decode(returnData, (uint256));
-            return tradedAmount;
-        } else if (!success) {
-            console.log(Helpers._getRevertMsg(returnData), '--', _swapDesc, 'failed');
-            revert();
-        }
-    }
-
-    function getHello(uint256 _x) external view {
-        console.log(_x);
-    }
-
 
 
     function execute(
@@ -135,34 +118,7 @@ contract FlashLoaner {
         ZrxQuote calldata _TUSDWETH_0x_quote,
         ZrxQuote calldata _USDCWBTC_0x_quote
     ) public {
-
-        address callerContract = 0x278261c4545d65a81ec449945e83a236666B64F5;
-
-        console.log('.');
-        console.log('*** caller ***');
-        console.log('USDC balance (caller): ', USDC.balanceOf(callerContract) / 10 ** 6);
-        console.log('USDT balance (caller): ', USDT.balanceOf(callerContract) / 10 ** 6);
-        console.log('TUSD balance (caller): ', TUSD.balanceOf(callerContract) / 1 ether);
-        console.log('BNT balance (caller): ', BNT.balanceOf(callerContract) / 1 ether);
-        console.log('WBTC balance (caller): ', WBTC.balanceOf(callerContract) / 10 ** 8);
-        console.log('WETH balance (caller): ', WETH.balanceOf(callerContract) / 1 ether);
-        console.log('ETH balance (caller): ', callerContract.balance / 1 ether);
-        console.log('aWETH balance (caller): ', aWETH.balanceOf(callerContract) / 1 ether);
-        console.log('aUSDC balance (caller): ', aUSDC.balanceOf(callerContract) / 10 ** 6);
-
-        console.log('.');
-
-        console.log('*** flashlogic ***');
-        console.log('USDC balance: ', USDC.balanceOf(address(this)) / 10 ** 6);
-        console.log('USDT balance: ', USDT.balanceOf(address(this)) / 10 ** 6);
-        console.log('TUSD balance: ', TUSD.balanceOf(address(this)) / 1 ether);
-        console.log('BNT balance: ', BNT.balanceOf(address(this)) / 1 ether);
-        console.log('WBTC balance: ', WBTC.balanceOf(address(this)) / 10 ** 8);
-        console.log('WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
-        console.log('ETH balance: ', address(this).balance / 1 ether);
-        console.log('aWETH balance: ', aWETH.balanceOf(address(this)) / 1 ether);
-        console.log('aUSDC balance: ', aUSDC.balanceOf(address(this)) / 10 ** 6);
-
+        //General variables
         bool success;
         bytes memory returnData;
         uint tradedAmount;
@@ -178,17 +134,6 @@ contract FlashLoaner {
         lendingPoolAAVE.withdraw(address(USDC), usdcWithdrawal, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6);
-
-        
-        //  tradedAmount = swapToExchange(
-        //     abi.encodeWithSignature(
-        //         'sushiUniCro_swap(address,uint256,address,address,uint256)', 
-        //         uniswapRouter, USDC.balanceOf(address(this)), USDC, WETH, 1
-        //     ), 
-        //     'Sushiswap TUSD/ETH'
-        // );
-        // console.log('***** ETH balance: ', address(this).balance / 1 ether);
-        // revert();
 
         
         //0x
@@ -224,52 +169,55 @@ contract FlashLoaner {
 
         //BANCOR
        //(USDC to BNT swap)
-        tradedAmount = swapToExchange(
+        tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'bancorSwap(address,address,uint256)', 
                 USDC, BNT, 883608.4825 * 10 ** 6
             ), 
-            'Bancor USDC/BNT'
+            'Bancor USDC/BNT',
+            swaper0x
         );
         console.log('5.- Amount of BNT traded (swap Bancor)', tradedAmount / 1 ether);
         console.log('___5.1.- BNT balance (after Bancor swap): ', BNT.balanceOf(address(this)) / 1 ether);
 
         //(BNT to ETH swap)
-        swapToExchange(
+        Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'bancorSwap(address,address,uint256)', 
                 BNT, ETH, BNT.balanceOf(address(this))
             ), 
-            'Bancor BNT/ETH'
+            'Bancor BNT/ETH',
+            swaper0x
         );
         console.log('6.- ETH balance (2nd Bancor swap): ', address(this).balance / 1 ether); 
 
         //CURVE - (USDC to TUSD)
-        swapToExchange(
+        Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'curveSwap(address,address,uint256,int128,int128,uint256)', 
                 yPool, USDC, 894793.4 * 10 ** 6, 1, 3, 1
             ), 
-            'Curve USDC/TUSD' 
+            'Curve USDC/TUSD',
+            swaper0x 
         );
         console.log('7.- TUSD balance (Curve swap): ', TUSD.balanceOf(address(this)) / 1 ether);
 
         // //SUSHISWAP - (TUSD to ETH)
-        tradedAmount = swapToExchange(
+        tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'sushiUniCro_swap(address,uint256,address,address,uint256)', 
                 sushiRouter, 11173.332238593491520262 * 1 ether, TUSD, WETH, 1
             ), 
-            'Sushiswap TUSD/ETH'
+            'Sushiswap TUSD/ETH',
+            swaper0x
         );
         console.log('8.- ETH traded (Sushiswap swap): ', tradedAmount / 1 ether, '--', tradedAmount);
 
         //Moving to Revenge
         (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall( 
             abi.encodeWithSignature(
-            'executeCont((address,address,address,address,bytes))', //'executeCont((address,address,address,address,bytes),function)',
+            'executeCont((address,address,address,address,bytes))', 
              _TUSDWETH_0x_quote
-            //  bytes4(keccak256(abi.encodePacked('getHello(uint256)'))) 
             )
         );
         if (!_success) {
@@ -278,12 +226,7 @@ contract FlashLoaner {
         require(_success, 'Delegatecall to Revenge of The Flash failed');
 
     }
-    
-// function (bytes memory, string memory) public returns(uint) swapToExchange
 
-// function getHello(uint _x) view {
-//         console.log(_x);
-//     }
 
 }
 

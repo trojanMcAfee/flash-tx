@@ -71,27 +71,14 @@ contract RevengeOfTheFlash {
     address revengeOfTheFlash;
     address offchainRelayer;
 
-    
-    // function (bytes memory, string memory) external returns(uint) swapToExchange
-    // function (bytes, string) public returns(uint) swapToExchange
+
 
 
 
     function executeCont(
         ZrxQuote calldata _TUSDWETH_0x_quote
-        // function (uint256) external view getHello 
     ) public {
-
-        // console.log('++++++++ num +++++++');
-
-        // (bool succ, ) = address(this).call(abi.encodeWithSignature('getHello(uint256)', 26));
-        // require(succ);
-
-        // // getHello(25);
-
-        // console.log('hi');
-        // revert();
-
+        
         //General variables
         uint tradedAmount;
         uint amountTokenOut;
@@ -150,12 +137,26 @@ contract RevengeOfTheFlash {
 
         
         // UNISWAP - USDC to WBTC
-        tradedAmount = sushiUniCro_swap(uniswapRouter, 44739 * 10 ** 6, USDC, WBTC, 0);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+                uniswapRouter, 44739 * 10 ** 6, USDC, WBTC, 0
+            ), 
+            'Uniswap USDC/WBTC',
+            swaper0x
+        );
         console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmount);
 
         // DODO (USDC to WBTC)
         address WBTCUSD_DODO_pool = 0x2109F78b46a789125598f5ad2b7f243751c2934d;
-        tradedAmount = dodoSwapV1(WBTCUSD_DODO_pool, USDC, WBTC, 760574.389243 * 10 ** 6);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'dodoSwapV1(address,address,address,uint256)', 
+                WBTCUSD_DODO_pool, USDC, WBTC, 760574.389243 * 10 ** 6
+            ), 
+            'Dodo USDC/WBTC',
+            swaper0x
+        );
         console.log('11.- WBTC received after swap (DODO): ', tradedAmount / 10 ** 8, '--', tradedAmount);
 
 
@@ -180,21 +181,41 @@ contract RevengeOfTheFlash {
 
         // BALANCER
         //(1st WBTC to ETH swap)
-        tradedAmount = balancerSwapV1(balancerWBTCETHpool_1, 1.74806084 * 10 ** 8, WBTC, WETH);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'balancerSwapV1(address,uint256,address,address)', 
+                balancerWBTCETHpool_1, 1.74806084 * 10 ** 8, WBTC, WETH, 1
+            ), 
+            'Balancer WBTC/ETH (1)',
+            swaper0x
+        );
         console.log('13.- Amount of WETH received (1st Balancer swap): ', tradedAmount / 1 ether);
         console.log('___13.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
 
         //(2nd WBTC/ETH swap)
-        tradedAmount = balancerSwapV1(balancerWBTCETHpool_2, 2.62209126 * 10 ** 8, WBTC, WETH);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'balancerSwapV1(address,uint256,address,address)', 
+                balancerWBTCETHpool_2, 2.62209126 * 10 ** 8, WBTC, WETH, 1
+            ), 
+            'Balancer WBTC/ETH (2)',
+            swaper0x
+        );
         console.log('14.- Amount of WETH received (2nd Balancer swap): ', tradedAmount / 1 ether);
         console.log('___14.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
         
         // UNISWAP - (WBTC to ETH)
-        tradedAmount = sushiUniCro_swap(uniswapRouter, 3.49612169 * 10 ** 8, WBTC, WETH, 1);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+                uniswapRouter, 3.49612169 * 10 ** 8, WBTC, WETH, 1
+            ), 
+            'Uniswap WBTC/ETH',
+            swaper0x
+        );
         console.log('15.- Amount of ETH received (Uniswap): ', tradedAmount / 1 ether);
 
-        // SUSHIWAP - (WBTC to ETH) +++++++++++++
-
+        // SUSHIWAP - (WBTC to ETH)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'sushiUniCro_swap(address,uint256,address,address,uint256)', 
@@ -203,10 +224,6 @@ contract RevengeOfTheFlash {
             'Sushiswap WBTC/ETH',
             swaper0x
         );
-        
-
-
-        // tradedAmount = sushiUniCro_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
         console.log('16.- Amount of ETH received (Sushiswap): ', tradedAmount / 1 ether);
 
 
@@ -228,11 +245,25 @@ contract RevengeOfTheFlash {
 
         
         // CURVE - (USDC to USDT)
-        curveSwap(dai_usdc_usdt_Pool, USDC, 6263553.80031 * 10 ** 6, 1, 2, 0);
+        Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'curveSwap(address,address,uint256,int128,int128,uint256)', 
+                dai_usdc_usdt_Pool, USDC, 6263553.80031 * 10 ** 6, 1, 2, 0
+            ), 
+            'Curve USDC/USDT',
+            swaper0x
+        );
         console.log('18.- USDT balance after swap (Curve): ', USDT.balanceOf(address(this)) / 10 ** 6);
 
         // CRO Protocol (USDT to WETH)
-        tradedAmount = sushiUniCro_swap(croDefiRouter, 78224.963477 * 10 ** 6, USDT, WETH);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address)', 
+                croDefiRouter, 78224.963477 * 10 ** 6, USDT, WETH
+            ), 
+            'CRO Protocol USDT/WETH',
+            swaper0x
+        );
         console.log('19.- WETH traded (CRO Protocol): ', tradedAmount / 1 ether);
 
         // 0x - (USDT to WETH) *******
@@ -241,24 +272,59 @@ contract RevengeOfTheFlash {
         console.log('20.- WETH withdrawn from the Exchange (0x): ', tradedAmount / 1 ether);
 
         // SUSHISWAP - (USDT to ETH)
-        tradedAmount = sushiUniCro_swap(sushiRouter, 2346748.904331 * 10 ** 6, USDT, WETH, 1);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+                sushiRouter, 2346748.904331 * 10 ** 6, USDT, WETH, 1
+            ), 
+            'Sushiswap USDT/ETH',
+            swaper0x
+        );
         console.log('21. - SUSHIWAP --- ETH: ', tradedAmount / 1 ether);
 
         // UNISWAP - (USDT to ETH)
-        tradedAmount = sushiUniCro_swap(uniswapRouter, 2894323.648676 * 10 ** 6, USDT, WETH, 1);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+                uniswapRouter, 2894323.648676 * 10 ** 6, USDT, WETH, 1
+            ), 
+            'Uniswap USDT/ETH',
+            swaper0x
+        );
         console.log('22. - UNISWAP --- ETH: ', tradedAmount / 1 ether);
 
         // CRO Protocol (USDC to WETH)
-        tradedAmount = sushiUniCro_swap(croDefiRouter, 100664.257504  * 10 ** 6, USDC, WETH);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address)', 
+                croDefiRouter, 100664.257504  * 10 ** 6, USDC, WETH
+            ), 
+            'CRO Protocol USDC/WETH',
+            swaper0x
+        );
         console.log('23.- CRO Protocol --- WETH: ', tradedAmount / 1 ether);
 
         // BALANCER - (USDC to ETH)
-        tradedAmount = balancerSwapV1(balancerETHUSDCpool, 100664.257505 * 10 ** 6, USDC, WETH);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'balancerSwapV1(address,uint256,address,address)', 
+                balancerETHUSDCpool, 100664.257505 * 10 ** 6, USDC, WETH
+            ), 
+            'Balancer USDC/ETH',
+            swaper0x
+        );
         console.log('24.- BALANCER --- ETH: ', tradedAmount / 1 ether);
 
         // DODO - (USDC to WETH)
         address WETHUSDC_DODO_pool = 0x75c23271661d9d143DCb617222BC4BEc783eff34;
-        tradedAmount = dodoSwapV1(WETHUSDC_DODO_pool, USDC, WETH, 704649.802534 * 10 ** 6);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'dodoSwapV1(address,address,address,uint256)', 
+                WETHUSDC_DODO_pool, USDC, WETH, 704649.802534 * 10 ** 6
+            ), 
+            'Dodo USDC/WETH',
+            swaper0x
+        );
         console.log('25.- DODO --- WETH: ', tradedAmount / 1 ether);
 
         // 0x - (USDC to WETH) *****
@@ -267,11 +333,26 @@ contract RevengeOfTheFlash {
         console.log('26.- 0x (MyExchange) --- WETH: ', tradedAmount / 1 ether);
 
         // UNISWAP - (USDC to ETH)
-        tradedAmount = sushiUniCro_swap(uniswapRouter, 2818599.21014 * 10 ** 6, USDC, WETH, 1);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+                uniswapRouter, 2818599.21014 * 10 ** 6, USDC, WETH, 1
+            ), 
+            'Uniswap USDC/ETH',
+            swaper0x
+        );
         console.log('27.- UNISWAP --- ETH: ', tradedAmount / 1 ether);
 
         // SUSHISWAP - (USDC to ETH)
-        tradedAmount = sushiUniCro_swap(sushiRouter, 3422584.755171 * 10 ** 6, USDC, WETH, 1);
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+                sushiRouter, 3422584.755171 * 10 ** 6, USDC, WETH, 1
+            ), 
+            'Sushiswap USDC/ETH',
+            swaper0x
+        );
+        // tradedAmount = sushiUniCro_swap(sushiRouter, 3422584.755171 * 10 ** 6, USDC, WETH, 1);
         console.log('28.- SUSHISWAP --- ETH: ', tradedAmount / 1 ether);
 
         // Convert to ETH the remainder of WETH
@@ -287,129 +368,4 @@ contract RevengeOfTheFlash {
     
     }
 
-
-    
-
-
-
-    
-
-
-    function curveSwap(
-        ICurve _pool,
-        MyIERC20 _tokenIn, 
-        uint _amountTokenIn, 
-        int128 _numTokenIn, 
-        int128 _numTokenOut,
-        uint _dir
-    ) public {
-        _tokenIn.approve(address(_pool), _amountTokenIn);
-        _dir == 1
-            ?
-        _pool.exchange_underlying(_numTokenIn, _numTokenOut, _amountTokenIn, 1)
-            :
-        _pool.exchange(_numTokenIn, _numTokenOut, _amountTokenIn, 1);
-    }
-
-
-    function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
-        address[] memory dodoPairs = new address[](1);
-        dodoPairs[0] = _pool;
-        address DODOapprove = 0xCB859eA579b28e02B87A1FDE08d087ab9dbE5149;
-        _tokenIn.approve(DODOapprove, _amount);
-
-        uint tradedAmount = dodoProxyV2.dodoSwapV1(
-            address(_tokenIn),
-            address(_tokenOut),
-            _amount,
-            1,
-            dodoPairs,
-            1,
-            false,
-            block.timestamp
-        );
-
-        return tradedAmount;
-    }
-
-
-
-    function oneInchSwap(address _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
-        // _tokenIn.approve(address(oneInch), type(uint).max);
-
-        (uint expectedReturn, uint[] memory _distribution) = oneInch.getExpectedReturn(
-            _tokenIn,
-            _tokenOut,
-            _amount,
-            10,
-            0
-        );
-        oneInch.swap{value: _amount}(_tokenIn, _tokenOut, _amount, 0, _distribution, 0);
-
-        return expectedReturn;
-    }
-
-
-    function sushiUniCro_swap(
-        ICroDefiSwapRouter02 _router, 
-        uint _amount, 
-        MyIERC20 _tokenIn, 
-        MyIERC20 _tokenOut
-    ) private returns(uint) {
-        MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
-        address[] memory path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
-
-        uint[] memory tradedAmounts =_router.swapExactTokensForTokens(
-            _amount,
-            0,
-            path,
-            address(this),
-            block.timestamp
-        );
-        return tradedAmounts[1];
-    }
-
-
-
-    function sushiUniCro_swap(
-        IUniswapV2Router02 _router, 
-        uint _amount, 
-        MyIERC20 _tokenIn, 
-        MyIERC20 _tokenOut, 
-        uint _dir
-    ) private returns(uint) {
-        MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
-        address[] memory _path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
-        uint[] memory tradedAmounts = 
-            _dir == 1 
-                ? 
-            _router.swapExactTokensForETH(_amount, 0, _path, address(this), block.timestamp)
-                :
-            _router.swapExactTokensForTokens(_amount, 0, _path, address(this), block.timestamp);
-
-        return tradedAmounts[1];
-    }
-
-
-
-
-    function balancerSwapV1(
-        IBalancerV1 _pool, 
-        uint _amount, 
-        MyIERC20 _tokenIn, 
-        MyIERC20 _tokenOut
-    ) private returns(uint) {
-        _tokenIn.approve(address(_pool), _amount);
-
-        (uint tradedAmount, ) = _pool.swapExactAmountIn(
-            address(_tokenIn), 
-            _amount, 
-            address(_tokenOut), 
-            0, 
-            type(uint).max
-        );
-        WETH_int.withdraw(tradedAmount);
-
-        return tradedAmount;
-    }
 }

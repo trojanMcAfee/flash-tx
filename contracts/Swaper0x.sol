@@ -175,7 +175,7 @@ contract Swaper0x {
 
 
 
-    function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) private returns(uint) {
+    function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {
         address[] memory dodoPairs = new address[](1);
         dodoPairs[0] = _pool;
         address DODOapprove = 0xCB859eA579b28e02B87A1FDE08d087ab9dbE5149;
@@ -257,13 +257,18 @@ contract Swaper0x {
 
 
 
-    function balancerSwapV1(IBalancerV1 _pool, uint _amount) private returns(uint) {
-        WBTC.approve(address(_pool), type(uint).max);
+    function balancerSwapV1(
+        IBalancerV1 _pool, 
+        uint _amount, 
+        MyIERC20 _tokenIn, 
+        MyIERC20 _tokenOut
+    ) external returns(uint) {
+        _tokenIn.approve(address(_pool), _amount);
 
         (uint tradedAmount, ) = _pool.swapExactAmountIn(
-            address(WBTC), 
+            address(_tokenIn), 
             _amount, 
-            address(WETH), 
+            address(_tokenOut), 
             0, 
             type(uint).max
         );

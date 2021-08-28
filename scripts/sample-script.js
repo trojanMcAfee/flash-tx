@@ -123,12 +123,12 @@ async function main() {
   console.log('Revenge Of The Flash deployed to: ', revengeOfTheFlash.address);
 
   //Deploys the logic contract (and links the Helpers library to it)
-  // const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner', {
-  //   libraries: {
-  //     Helpers: helpers.address
-  //   }
-  // });
-  const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
+  const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner', {
+    libraries: {
+      Helpers: helpers.address
+    }
+  });
+  // const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
   const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address, offchainRelayer);
   await flashlogic.deployed();
   await flashlogic.setExchange(swaper0x.address);
