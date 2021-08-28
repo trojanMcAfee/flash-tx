@@ -195,17 +195,18 @@ contract RevengeOfTheFlash {
 
         // SUSHIWAP - (WBTC to ETH) +++++++++++++
 
-        // tradedAmount = swapToExchange(
-        //     abi.encodeWithSignature(
-        //         'sushiUniCro_swap(address,uint256,address,address,uint256)', 
-        //         sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1
-        //     ), 
-        //     'Sushiswap WBTC/ETH'
-        // );
+        tradedAmount = Helpers.swapToExchange(
+            abi.encodeWithSignature(
+                'sushiUniCro_swap(address,uint256,address,address,uint256)', 
+                sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1
+            ), 
+            'Sushiswap WBTC/ETH',
+            swaper0x
+        );
         
 
 
-        tradedAmount = sushiUniCro_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
+        // tradedAmount = sushiUniCro_swap(sushiRouter, 7.42925859 * 10 ** 8, WBTC, WETH, 1);
         console.log('16.- Amount of ETH received (Sushiswap): ', tradedAmount / 1 ether);
 
 

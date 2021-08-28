@@ -136,7 +136,7 @@ async function main() {
 
   
   //Deploys the proxy where the loan is requested
-  const DydxFlashloaner = await hre.ethers.getContractFactory("DyDxFlashloaner2");
+  const DydxFlashloaner = await hre.ethers.getContractFactory('DyDxFlashloaner2');
   const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
   await dxdxFlashloaner.deployed();
   console.log("dYdX_flashloaner deployed to:", dxdxFlashloaner.address);
