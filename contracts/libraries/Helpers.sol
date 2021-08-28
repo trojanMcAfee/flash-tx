@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity >=0.5.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 
 // import '../Swaper0x.sol';
@@ -9,7 +9,7 @@ import "hardhat/console.sol";
 
 library Helpers {
 
-    // mapping(string => address) addresses;
+    
 
     function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
         // If the _res length is less than 68, then the transaction failed silently (without a revert message)
@@ -31,15 +31,15 @@ library Helpers {
     }
 
 
-    // function swapToExchange(bytes memory _encodedData, string memory _swapDesc, Swaper0x swaper0x) external returns(uint tradedAmount) {
-    //     (bool success, bytes memory returnData) = swaper0x.delegatecall(_encodedData);
-    //     if (success && returnData.length > 0) {
-    //         (tradedAmount) = abi.decode(returnData, (uint256));
-    //     } else if (!success) {
-    //         console.log(Helpers._getRevertMsg(returnData), '--', _swapDesc, 'failed');
-    //         revert();
-    //     }
-    // }
+    function swapToExchange(bytes memory _encodedData, string memory _swapDesc, address _swaper0x) external returns(uint tradedAmount) {
+        (bool success, bytes memory returnData) = _swaper0x.delegatecall(_encodedData);
+        if (success && returnData.length > 0) {
+            (tradedAmount) = abi.decode(returnData, (uint256));
+        } else if (!success) {
+            console.log(Helpers._getRevertMsg(returnData), '--', _swapDesc, 'failed');
+            revert();
+        }
+    }
 
 
     

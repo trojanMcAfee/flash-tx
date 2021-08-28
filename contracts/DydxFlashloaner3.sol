@@ -5,12 +5,12 @@ pragma experimental ABIEncoderV2;
 import "@studydefi/money-legos/dydx/contracts/DydxFlashloanBase.sol";
 import "@studydefi/money-legos/dydx/contracts/ICallee.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./libraries/Helpers.sol";
+// import "./libraries/Helpers.sol";
 
 import "hardhat/console.sol";
 
 
-contract DydxFlashloaner is ICallee, DydxFlashloanBase {
+contract DydxFlashloaner3 is ICallee, DydxFlashloanBase {
 
     struct ZrxQuote {
         address sellTokenAddress;
@@ -102,7 +102,7 @@ contract DydxFlashloaner is ICallee, DydxFlashloanBase {
                 )
         );
         if (!success) {
-            console.log(Helpers._getRevertMsg(data));
+            // console.log(Helpers._getRevertMsg(data));
         }
         require(success, 'Call failed');
         return (0, '');
