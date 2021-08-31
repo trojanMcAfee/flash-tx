@@ -7,7 +7,6 @@ import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/ICurve.sol';
 import './libraries/Helpers.sol';
-import './libraries/Structs0x.sol';
 import './FlashLoaner.sol';
 import './Swaper0x.sol';
 import './libraries/MySafeERC20.sol';

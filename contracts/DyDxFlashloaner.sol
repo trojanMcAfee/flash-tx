@@ -54,7 +54,7 @@ interface ICallee {
 
 
 
-contract DyDxFlashloaner2 is ICallee {
+contract DyDxFlashloaner is ICallee {
 
     struct MyCustomData {
         address token;
