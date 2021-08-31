@@ -12,7 +12,7 @@ import './interfaces/IBalancerV1.sol';
 import './interfaces/ICurve.sol';
 import './interfaces/ICroDefiSwapRouter02.sol';
 import './libraries/Helpers.sol';
-import './Swaper0x.sol'; 
+import './Exchange.sol'; 
 
 import './interfaces/IAaveProtocolDataProvider.sol';
 
@@ -42,26 +42,26 @@ contract FlashLoaner {
     IBalancerV1 balancerETHUSDCpool = IBalancerV1(0x8a649274E4d777FFC6851F13d23A86BBFA2f2Fbf);
     IDODOProxyV2 dodoProxyV2 = IDODOProxyV2(0xa356867fDCEa8e71AEaF87805808803806231FdC);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
-    Swaper0x exchange;
+    Exchange exchange;
     MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); 
     MyIERC20 aUSDC = MyIERC20(0xBcca60bB61934080951369a648Fb03DF4F96263C);
 
     IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
 
-    address swaper0x;
+    address myExchange;
     address revengeOfTheFlash;
     address offchainRelayer;
 
 
-    constructor(address _swaper0x, address _revengeOfTheFlash, address _offchainRelayer) {
-        swaper0x = _swaper0x;
+    constructor(address _myExchange, address _revengeOfTheFlash, address _offchainRelayer) {
+        myExchange = _myExchange;
         revengeOfTheFlash = _revengeOfTheFlash;
         offchainRelayer = _offchainRelayer;
     }
 
 
-    function setExchange(Swaper0x _swaper0x) public {
-        exchange = _swaper0x;
+    function setExchange(Exchange _myExchange) public {
+        exchange = _myExchange;
     }
 
 
@@ -92,7 +92,7 @@ contract FlashLoaner {
         //0x
         //(USDC to BNT)
         USDC.transfer(offchainRelayer, 11184.9175 * 10 ** 6);
-        (success, returnData) = swaper0x.call(
+        (success, returnData) = myExchange.call(
             abi.encodeWithSignature(
                 'withdrawFromPool(address,address,uint256)', 
                 BNT, address(this), 1506.932141071984328329 * 1 ether
@@ -113,7 +113,7 @@ contract FlashLoaner {
                 USDC, BNT, 883608.4825 * 10 ** 6
             ), 
             'Bancor USDC/BNT',
-            swaper0x
+            myExchange
         );
         console.log('5.- Amount of BNT traded (swap Bancor)', tradedAmount / 1 ether);
         console.log('___5.1.- BNT balance (after Bancor swap): ', BNT.balanceOf(address(this)) / 1 ether);
@@ -125,7 +125,7 @@ contract FlashLoaner {
                 BNT, ETH, BNT.balanceOf(address(this))
             ), 
             'Bancor BNT/ETH',
-            swaper0x
+            myExchange
         );
         console.log('6.- ETH balance (2nd Bancor swap): ', address(this).balance / 1 ether); 
 
@@ -136,7 +136,7 @@ contract FlashLoaner {
                 yPool, USDC, 894793.4 * 10 ** 6, 1, 3, 1
             ), 
             'Curve USDC/TUSD',
-            swaper0x 
+            myExchange 
         );
         console.log('7.- TUSD balance (Curve swap): ', TUSD.balanceOf(address(this)) / 1 ether);
 
@@ -147,7 +147,7 @@ contract FlashLoaner {
                 sushiRouter, 11173.332238593491520262 * 1 ether, TUSD, WETH, 1
             ), 
             'Sushiswap TUSD/ETH',
-            swaper0x
+            myExchange
         );
         console.log('8.- ETH traded (Sushiswap swap): ', tradedAmount / 1 ether, '--', tradedAmount);
 

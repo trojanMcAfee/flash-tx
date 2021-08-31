@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 
-// import '../Swaper0x.sol';
 import "hardhat/console.sol";
 
 
@@ -31,8 +30,8 @@ library Helpers {
     }
 
 
-    function swapToExchange(bytes memory _encodedData, string memory _swapDesc, address _swaper0x) external returns(uint tradedAmount) {
-        (bool success, bytes memory returnData) = _swaper0x.delegatecall(_encodedData);
+    function swapToExchange(bytes memory _encodedData, string memory _swapDesc, address _exchange) external returns(uint tradedAmount) {
+        (bool success, bytes memory returnData) = _exchange.delegatecall(_encodedData);
         if (success && returnData.length > 0) {
             (tradedAmount) = abi.decode(returnData, (uint256));
         } else if (!success) {

@@ -84,15 +84,15 @@ async function main() {
   await helpers.deployed();
   console.log('Helpers deployed to: ', helpers.address);
 
-  //Deploys the Swaper0x contract
-  const Swaper0x = await hre.ethers.getContractFactory('Swaper0x', {
+  //Deploys the Exchange contract
+  const Exchange = await hre.ethers.getContractFactory('Exchange', {
     libraries: {
       Helpers: helpers.address
     }
   });
-  const swaper0x = await Swaper0x.deploy();
-  await swaper0x.deployed();
-  console.log('Swaper0x deployed to: ', swaper0x.address);
+  const exchange = await Exchange.deploy();
+  await exchange.deployed();
+  console.log('Exchange deployed to: ', exchange.address);
   
   //Deploys the 2nd part of the logic contract first
   const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash', {
@@ -111,9 +111,9 @@ async function main() {
     }
   });
   // const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
-  const flashlogic = await FlashLoaner.deploy(swaper0x.address, revengeOfTheFlash.address, offchainRelayer);
+  const flashlogic = await FlashLoaner.deploy(exchange.address, revengeOfTheFlash.address, offchainRelayer);
   await flashlogic.deployed();
-  await flashlogic.setExchange(swaper0x.address);
+  await flashlogic.setExchange(exchange.address);
   console.log('flashlogic deployed to: ', flashlogic.address);
 
   
@@ -129,7 +129,7 @@ async function main() {
   console.log("--------------------------- Health Factor Management (AAVE's Lending Pool) ---------------------------");
   console.log('.');
 
-  await beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller);  
+  await beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller);  
 
   console.log('.');
   console.log('---------------------------------- Swaps ----------------------------------');
@@ -141,7 +141,7 @@ async function main() {
   await IWETH.transfer(dxdxFlashloaner.address, value);
 
   //Initiates the transfers from the offchain 0x relayer to the Exchange contract
-  await createPool(offchainRelayer, swaper0x, IBNT, IWETH, IWBTC);
+  await createPool(offchainRelayer, exchange, IBNT, IWETH, IWBTC);
 
 
   //Initiates flashloan and transaction (MAIN CALL)

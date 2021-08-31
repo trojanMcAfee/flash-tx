@@ -22,7 +22,7 @@ import 'hardhat/console.sol';
 
 
 
-contract Swaper0x {
+contract Exchange {
 
     MyIERC20 USDT;
     MyIERC20 WBTC;
@@ -44,7 +44,7 @@ contract Swaper0x {
     IBalancerV1 balancerETHUSDCpool;
     IDODOProxyV2 dodoProxyV2;
     ICroDefiSwapRouter02 croDefiRouter;
-    Swaper0x exchange;
+    Exchange exchange;
     MyIERC20 aWETH;
     MyIERC20 aUSDC;
 
@@ -52,7 +52,7 @@ contract Swaper0x {
 
 
 
-    address swaper0x;
+    address myExchange;
     address revengeOfTheFlash;
 
     receive() external payable {}

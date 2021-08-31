@@ -12,8 +12,8 @@ const burnerAddr = '0x000000000000000000000000000000000000dEaD';
 const usdtAddr = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 
 
-async function getHealthFactor(user, swaper0x) {
-    const tx = await swaper0x.getUserHealthFactor_aave(user);
+async function getHealthFactor(user, exchange) {
+    const tx = await exchange.getUserHealthFactor_aave(user);
     const receipt = await tx.wait();
     const { data } = receipt.logs[0];
     const decodedData = defaultAbiCoder.decode(["uint256"], data);
@@ -40,7 +40,7 @@ async function getUserReserveData_aave(asset, user, decimals) {
 
 
 
-async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller) {
+async function beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller) {
 
     const aaveDataProvider = await hre.ethers.getContractAt('IAaveProtocolDataProvider', aaveDataProviderAddr);
     // const uniswapRouter = await hre.ethers.getContractAt('IUniswapV2Router02', uniswapRouterAddr);
@@ -62,7 +62,7 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     callerBorrowedUSDC = tx[2].toString();
     callerAtokenBalance_usdc = tx[0].toString();
     
-    const callerHealthFactor_preDeposit = await getHealthFactor(callerContract, swaper0x);
+    const callerHealthFactor_preDeposit = await getHealthFactor(callerContract, exchange);
     // console.log("Caller's health factor pre-ETH deposit (forbids USDC withdrawal): ", callerHealthFactor_preDeposit);
   
     //Sends ETH to original Caller for paying the fees of withdrawing USDC from lending pool
@@ -90,7 +90,7 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
   
     //Deposit ETH in lending pool to increase health factor (caller)
     await IWETHgateway.connect(callerSign).depositETH(lendingPoolAaveAddr, callerContract, 0, { value });
-    const callerHealthFactor_postDeposit = await getHealthFactor(callerContract, swaper0x);
+    const callerHealthFactor_postDeposit = await getHealthFactor(callerContract, exchange);
     // console.log("Caller's health factor after ETH deposit (allows USDC withdrawal): ", callerHealthFactor_postDeposit);
   
     //Withdraw USDC from lending pool and send them to Flashlogic
@@ -128,11 +128,6 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     //Spends amount equally to original caller's debt (both in USDC and USDT) in order to match their health factor
     await IUSDC.connect(flashlogicSign).transfer(burnerAddr, Number(callerBorrowedUSDC));
     await IUSDT.connect(flashlogicSign).transfer(burnerAddr, usdtCallerDebt);
-
-    // console.log('**********************');
-    // await lendingPoolAave.connect(flashlogicSign).withdraw(wethAddr, parseEther('10'), flashlogic.address);
-    // await swaper0x.getUserAccountData_aave(flashlogic.address);
-    // console.log('**********************');
     
     //Stops impersonating Flashlogic
     await hre.network.provider.request({
@@ -183,7 +178,7 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     console.log('Current Variable Debt (weth): ', wethData_flashlogic.currentVariableDebt);
     console.log('Scaled Variable Debt (weth): ', wethData_flashlogic.scaledVariableDebt);
     
-    const flashlogicHealthFactor = await getHealthFactor(flashlogic.address, swaper0x);
+    const flashlogicHealthFactor = await getHealthFactor(flashlogic.address, exchange);
     console.log("Flashlogic's health factor after movements (forbids USDC withdrawals): ", Number(flashlogicHealthFactor));
 
     
