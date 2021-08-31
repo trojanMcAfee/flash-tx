@@ -10,14 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@0x/contracts-exchange-libs": "^4.3.34",
     "@aave/protocol-v2": "^1.0.1",
-    "@chainlink/contracts": "^0.2.0",
     "@openzeppelin/contracts": "^2.5.1",
-    "@studydefi/money-legos": "^2.4.2",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
-    "0x.js": "^6.0.3",
     "dotenv": "^10.0.0",
     "hardhat": "^2.4.1",
     "node-fetch": "^2.6.1"

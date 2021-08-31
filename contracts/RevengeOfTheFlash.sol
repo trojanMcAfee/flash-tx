@@ -4,22 +4,20 @@ pragma abicoder v2;
 
 
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
-import './interfaces/IExchange0xV2.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/ICurve.sol';
 import './libraries/Helpers.sol';
 import './libraries/Structs0x.sol';
 import './FlashLoaner.sol';
-import './interfaces/I1inchProtocol.sol';
 import './Swaper0x.sol';
 import './libraries/MySafeERC20.sol';
 import './interfaces/ICroDefiSwapRouter02.sol';
 
 import './libraries/DataTypesAAVE.sol';
-import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
 import './interfaces/IAaveProtocolDataProvider.sol';
-import './interfaces/IAToken.sol';
 import './interfaces/IWETHgateway.sol';
+
+
 
 import "hardhat/console.sol";
 
@@ -42,29 +40,17 @@ contract RevengeOfTheFlash {
     ICurve dai_usdc_usdt_Pool;
     IUniswapV2Router02 sushiRouter;
     IUniswapV2Router02 uniswapRouter;
-    I1inchProtocol oneInch;
     IBancorNetwork bancorNetwork;
     IBalancerV1 balancerWBTCETHpool_1;
     IBalancerV1 balancerWBTCETHpool_2; 
     IBalancerV1 balancerETHUSDCpool;
     IDODOProxyV2 dodoProxyV2;
-    IExchange0xV2 exchange0xV2;
     ICroDefiSwapRouter02 croDefiRouter;
     Swaper0x exchange;
     MyIERC20 aWETH;
     MyIERC20 aUSDC;
 
     IAaveProtocolDataProvider aaveProtocolDataProvider;
-
-
-
-    struct ZrxQuote {
-        address sellTokenAddress;
-        address buyTokenAddress;
-        address spender;
-        address swapTarget;
-        bytes swapCallData;
-    }
 
 
     address swaper0x;
@@ -75,10 +61,8 @@ contract RevengeOfTheFlash {
 
 
 
-    function executeCont(
-        ZrxQuote calldata _TUSDWETH_0x_quote
-    ) public {
-        
+    function executeCont() public {
+
         //General variables
         uint tradedAmount;
         uint amountTokenOut;
@@ -86,26 +70,6 @@ contract RevengeOfTheFlash {
         //0x - (TUSD to WETH)
         console.log('9. - WETH balance before TUSD swap: ', WETH.balanceOf(address(this)));
 
-        // Structs0x.Order memory TUSDWETH_order = Structs0x.Order({
-        //     makerAddress: offchainRelayer,               
-        //     takerAddress: address(this),              
-        //     feeRecipientAddress: 0x55662E225a3376759c24331a9aeD764f8f0C9FBb,    
-        //     senderAddress: 0x0000000000000000000000000000000000000000,         
-        //     makerAssetAmount: 224817300000000000000,        
-        //     takerAssetAmount: 882693420471000000000000,           
-        //     makerFee: 0,             
-        //     takerFee: 0,              
-        //     expirationTimeSeconds: 1620982324,           
-        //     salt: 1620982124141785846,                   
-        //     makerAssetData: "0xf47261b0000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",          
-        //     takerAssetData: "0xf47261b00000000000000000000000000000000000085d4780b73119b644ae5ecd22b376"
-        // });
-
-        // exchange0xV2.fillOrder( 
-        //     TUSDWETH_order, 
-        //     882693246848885830100720,
-        //     "0x1c822482f018fcea4b549c13f9cc9946967098189f5de8325b6413484b08ebf5694a32d92e764fb4319812c7242987d13cdb2d4448701e2b73f9c9fcfc34c6e79703"
-        // );
 
         TUSD.transfer(offchainRelayer, 882693.24684888583010072 * 1 ether);
         (bool success, bytes memory returnData) = swaper0x.call(
@@ -117,22 +81,9 @@ contract RevengeOfTheFlash {
         if (!success) {
             console.log(Helpers._getRevertMsg(returnData));
         }
-        require(success, 'TUSD/WETH withdrawal from pool failed');
+        require(success, 'TUSD/WETH withdrawal from pool failed'); 
 
-        
-        // (bool success, bytes memory returnData) = swaper0x.delegatecall(
-        //     abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
-        //         _TUSDWETH_0x_quote.sellTokenAddress,
-        //         _TUSDWETH_0x_quote.buyTokenAddress,
-        //         _TUSDWETH_0x_quote.spender,
-        //         _TUSDWETH_0x_quote.swapTarget,
-        //         _TUSDWETH_0x_quote.swapCallData  
-        //     )
-        // );
-        // if (!success) {
-        //     console.log(Helpers._getRevertMsg(returnData));
-        // }
-        // require(success, 'TUSDWETH 0x swap failed');
+
         console.log('9. - WETH balance after TUSD swap: ', WETH.balanceOf(address(this)) / 1 ether);
 
         
@@ -173,7 +124,7 @@ contract RevengeOfTheFlash {
         } else {
             (amountTokenOut) = abi.decode(_returnData, (uint256));
         }
-        require(success, 'USDC/WBTC withdrawal from pool failed');
+        require(_success, 'USDC/WBTC withdrawal from pool failed');
 
         console.log('12.- Amount of WBTC traded (0x - pool): ', amountTokenOut / 10 ** 8);
         console.log('___12.1.- WBTC balance after 0x swap (0x - 1Inch): ', WBTC.balanceOf(address(this)) / 10 ** 8);
@@ -240,7 +191,7 @@ contract RevengeOfTheFlash {
         } else {
             (amountTokenOut) = abi.decode(_returnData_, (uint));
         }
-        require(success, 'USDC/WBTC withdrawal from pool failed');
+        require(_success_, 'USDC/WBTC withdrawal from pool failed');
         console.log('17.- WETH received (0x swap): ', amountTokenOut / 1 ether);
 
         

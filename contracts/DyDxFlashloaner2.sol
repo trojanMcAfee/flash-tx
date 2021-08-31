@@ -52,15 +52,9 @@ interface ICallee {
     function callFunction(address sender, Account.Info memory accountInfo, bytes memory data) external;
 }
 
-contract DyDxFlashloaner2 is ICallee {
 
-    struct ZrxQuote {
-        address sellTokenAddress;
-        address buyTokenAddress;
-        address spender;
-        address swapTarget;
-        bytes swapCallData;
-    }
+
+contract DyDxFlashloaner2 is ICallee {
 
     struct MyCustomData {
         address token;
@@ -69,23 +63,6 @@ contract DyDxFlashloaner2 is ICallee {
 
     address public logicContract;
     uint public borrowed;
-
-    function _getZrxQuote(
-        address[4][] memory _quotesAddr, 
-        bytes[] memory _bytes,
-        uint _index
-    ) private pure returns(ZrxQuote memory) 
-    {
-        ZrxQuote memory zrxQuote = ZrxQuote({
-            sellTokenAddress: _quotesAddr[_index][0],
-            buyTokenAddress: _quotesAddr[_index][1],
-            spender: _quotesAddr[_index][2],
-            swapTarget: _quotesAddr[_index][3],
-            swapCallData: _bytes[_index]
-        });
-
-        return zrxQuote;
-    }
 
     IWETH private WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     ISoloMargin private soloMargin = ISoloMargin(0x1E0447b19BB6EcFdAe1e4AE1694b0C3659614e4e);
@@ -100,30 +77,9 @@ contract DyDxFlashloaner2 is ICallee {
     function initiateFlashLoan(
         address _solo, 
         address _token, 
-        uint256 _amount, 
-        address[4][] memory quotes_addr_0x,
-        bytes[] memory quotes_bytes_0x
+        uint256 _amount
     ) external {
-        ZrxQuote memory USDCBNT_0x_quote = _getZrxQuote(
-            quotes_addr_0x,
-            quotes_bytes_0x,
-            0
-        );        
 
-        ZrxQuote memory TUSDWETH_0x_quote = _getZrxQuote(
-            quotes_addr_0x,
-            quotes_bytes_0x,
-            1
-        );
-
-        ZrxQuote memory USDCWBTC_0x_quote = _getZrxQuote(
-            quotes_addr_0x,
-            quotes_bytes_0x,
-            2
-        );
-
-
-        
         Actions.ActionArgs[] memory operations = new Actions.ActionArgs[](3);
 
         operations[0] = Actions.ActionArgs({
@@ -156,10 +112,7 @@ contract DyDxFlashloaner2 is ICallee {
                 otherAddress: address(this),
                 otherAccountId: 0,
                 data: abi.encode(
-                    MyCustomData({token: _token, repayAmount: _amount + 2}), 
-                    USDCBNT_0x_quote, 
-                    TUSDWETH_0x_quote,
-                    USDCWBTC_0x_quote
+                    MyCustomData({token: _token, repayAmount: _amount + 2})
                 )
             });
         
@@ -188,14 +141,9 @@ contract DyDxFlashloaner2 is ICallee {
     // This is the function called by dydx after giving us the loan
     function callFunction(address sender, Account.Info memory accountInfo, bytes memory data) external override {
         // Decode the passed variables from the data object
-        (
-            MyCustomData memory mcd, 
-            ZrxQuote memory USDCBNT_0x_quote,  
-            ZrxQuote memory TUSDWETH_0x_quote,
-            ZrxQuote memory USDCWBTC_0x_quote
-        ) = abi.decode(
+        ( MyCustomData memory mcd ) = abi.decode(
             data, 
-            (MyCustomData, ZrxQuote, ZrxQuote, ZrxQuote)
+            (MyCustomData)
         );
         uint256 balOfLoanedToken = MyIERC20(mcd.token).balanceOf(address(this));
 
@@ -206,20 +154,16 @@ contract DyDxFlashloaner2 is ICallee {
 
         console.log('1.- Borrow WETH from dYdX (flashloan): ', (MyIERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 1 ether);
         MyIERC20(mcd.token).transfer(logicContract, borrowed);
-        executeCall(USDCBNT_0x_quote, TUSDWETH_0x_quote, USDCWBTC_0x_quote); 
+        executeCall(); 
     }
 
 
-    function executeCall(
-        ZrxQuote memory _USDCBNT_0x_quote, 
-        ZrxQuote memory _TUSDWETH_0x_quote,
-        ZrxQuote memory _USDCWBTC_0x_quote
-        ) private returns(uint, string memory) {
+    function executeCall() private returns(uint, string memory) {
 
         (bool success, bytes memory data) = logicContract.call(
                 abi.encodeWithSignature(
-                    'execute(uint256,(address,address,address,address,bytes),(address,address,address,address,bytes),(address,address,address,address,bytes))',
-                     borrowed, _USDCBNT_0x_quote, _TUSDWETH_0x_quote, _USDCWBTC_0x_quote
+                    'execute(uint256)',
+                     borrowed
                 )
         );
         if (!success) {

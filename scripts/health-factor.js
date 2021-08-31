@@ -32,14 +32,6 @@ async function getUserReserveData_aave(asset, user, decimals) {
       currentVariableDebt: result[2].toString() / decimals,
       scaledVariableDebt: result[4].toString() / decimals
     }
-        
-        // console.log('*** ' + stringUser + ' ***');
-        // console.log('aUSDC balance: ', result[0].toString() / decimals);
-        // console.log('current variable debt: ', result[2].toString() / decimals);
-        // console.log('scaledVariableDebt: ', result[4].toString() / decimals);
-        // console.log('liquidityRate: ', result[6].toString());
-        // console.log('usageAsCollateralEnabled:', result[8].toString());
-
 }
 
 
@@ -87,11 +79,6 @@ async function beginManagement(signer, swaper0x, wethAddr, flashlogic, usdcData_
     }); 
     // console.log('ETH deposited by Caller in lending pool: ', formatEther(value));
     
-    //Trades USDC for the borrowed amount made by the caller which will simulate the first supply of ETH to Aave's lending pool
-    // const path = [wethAddr, usdcAddr];
-    // await uniswapRouter.swapETHForExactTokens(callerBorrowedUSDC, path, flashlogic.address, MaxUint256, {
-    //   value: parseEther('5100')
-    // });
 
   
     //Starts impersonating the original caller for ETH deposit to increase Health Factor and allow USDC withdrawal

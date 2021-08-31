@@ -1,18 +1,13 @@
-const { legos } = require("@studydefi/money-legos");
-// const uniRouterABI = require('../artifacts/@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json').abi;
-const fetch = require("node-fetch");
-const { generatePseudoRandomSalt, Order, signatureUtils } = require('@0x/order-utils');
 require('dotenv').config();
 
+const { createPool } = require('./exchange-pool.js');
+const { beginManagement, getUserReserveData_aave } = require('./health-factor.js');
+const { showsCallersData } = require('./callers-post-flash.js');
 
-
-const { createQueryString, API_QUOTE_URL, getQuote, getQuote2 } = require('./relayer.js');
-const { beginManagement, getHealthFactor, getUserReserveData_aave } = require('./health-factor.js');
-const { showsCallersData, getUserAccountData_aave } = require('./callers-post-flash.js');
-const { parseEther, parseUnits, formatEther, defaultAbiCoder } = ethers.utils;
+const { parseEther, parseUnits, formatEther } = ethers.utils;
 const { MaxUint256 } = ethers.constants;
 
-const soloMarginAddr = legos.dydx.soloMargin.address;
+const soloMarginAddr = '0x1E0447b19BB6EcFdAe1e4AE1694b0C3659614e4e';
 const wethAddr = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'; 
 const wbtcAdr = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599';
 const bntAddr = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C';
@@ -20,7 +15,6 @@ const offchainRelayer = '0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9';
 const aUSDCAddr = '0xBcca60bB61934080951369a648Fb03DF4F96263C';
 const aWethAddr = '0x030bA81f1c18d280636F32af80b9AAd02Cf0854e';
 const callerContract = '0x278261c4545d65a81ec449945e83a236666B64F5';
-const lendingPoolAaveAddr = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
 const usdcAddr = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 const usdtAddr = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
@@ -33,17 +27,6 @@ const org_msgSender = '0x4cb2b6dcb8da65f8421fed3d44e0828e07594a60';
 const org_callerContract = '0x278261c4545d65a81ec449945e83a236666B64F5';
 const org_logicContract = '0xb3c9669a5706477a2b237d98edb9b57678926f04';
 const org_dYdX_flashloaner = '0x691d4172331a11912c6d0e6d1a002e3d7ced6a66';
-
-
-// async function getUserAccountData_aave(user) {
-//   // const lendingPoolAaveAddr = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
-//   const ILendingPool = await hre.ethers.getContractAt('MyILendingPool', '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9');
-//   const tx = await ILendingPool.getUserAccountData(user);
-//   console.log('********: ', tx);
-
-// }
-
-
 
 
 
@@ -112,7 +95,6 @@ async function main() {
   console.log('Swaper0x deployed to: ', swaper0x.address);
   
   //Deploys the 2nd part of the logic contract first
-  // const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash');
   const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash', {
     libraries: {
       Helpers: helpers.address
@@ -144,7 +126,6 @@ async function main() {
 
 
 
-
   console.log("--------------------------- Health Factor Management (AAVE's Lending Pool) ---------------------------");
   console.log('.');
 
@@ -155,132 +136,24 @@ async function main() {
   console.log('.');
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
-  
   value = parseUnits('2', "gwei"); //gwei
   await IWETH.deposit({ value });
   await IWETH.transfer(dxdxFlashloaner.address, value);
 
-  
-  /**** Sending 72 ETH while I solve the 0x problem ****/
-  // value = parseUnits('73', "ether"); //gwei
-  // await IWeth.deposit({ value });
-  // await IWeth.transfer(flashlogic.address, value);
+  //Initiates the transfers from the offchain 0x relayer to the Exchange contract
+  await createPool(offchainRelayer, swaper0x, IBNT, IWETH, IWBTC);
 
 
-  //** impersonating..... */
-
-  await hre.network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [offchainRelayer],
-  });
-  
-  const signerImp = await ethers.getSigner(offchainRelayer);
-  //1st swap (USDC to BNT - transfer BNT) //call approve from the swaper0x contract
-  await IBNT.connect(signerImp).transfer(swaper0x.address, parseEther('1506.932141071984328329'));
-  //2nd swap (TUSD to WETH - transfer WETH)
-  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('224.817255779374783216'));
-  //3rd swap (USDC to WBTC - transfer WBTC)
-  await IWBTC.connect(signerImp).transfer(swaper0x.address, 19.30930945 * 10 ** 8);
-  //4th swap (WBTC to WETH - transfer WETH)
-  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('253.071556591057205072'));
-  //5th swap (USDT to WETH - transfer WETH)
-  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('239.890714288415882321'));
-  //6th swap (USDC to WETH - transfer WETH)
-  await IWETH.connect(signerImp).transfer(swaper0x.address, parseEther('231.15052891491875094'));
-
-
-  await hre.network.provider.request({
-    method: "hardhat_stopImpersonatingAccount",
-    params: [offchainRelayer],
-  });
-//**** end of impersonating */
-
-
-  
-
-/*****  0x quotes *********/
-
-  // const qs = createQueryString({
-  //   sellToken: 'TUSD',
-  //   buyToken: 'WETH',
-  //   sellAmount: BigInt(882693 * 10 ** 18), //11184 * 10 ** 6
-  //   // includedSources: 'Uniswap_V2'
-  // }); 
-  
-  // const quoteUrl = `${API_QUOTE_URL}?${qs}&slippagePercentage=0.8`;
-  // const response = await fetch(quoteUrl);
-  // const quote = await response.json();
-
-
-  // console.log('the quote: ', quote);
-  // const quoteAddr = [
-  //   quote.sellTokenAddress,
-  //   quote.buyTokenAddress,
-  //   quote.allowanceTarget, 
-  //   quote.to
-  // ];
-
-
-
-/*****  0x quotes *********/
-
-
-// let value2 = parseEther('1');
-// await signer.sendTransaction({
-//   value: value2,
-//   to: flashlogic.address
-// });
-
-
-
-  const quotes_bytes_0x = [];
-  const quotes_addr_0x = [];
-
-  const USDCBNT_0x_quote = await getQuote('USDC', 'BNT', 11184 * 10 ** 6);
-  quotes_addr_0x[0] = USDCBNT_0x_quote.addresses;
-  quotes_bytes_0x[0] = USDCBNT_0x_quote.bytes; 
-
-
-  const TUSDWETH_0x_quote = await getQuote('TUSD', 'WETH', BigInt(882693 * 10 ** 18)); 
-  quotes_addr_0x[1] = TUSDWETH_0x_quote.addresses; 
-  quotes_bytes_0x[1] = TUSDWETH_0x_quote.bytes; 
-                                                
-  
-  const USDCWBTC_0x_quote = await getQuote('USDC', 'WBTC', 984272 * 10 ** 6);                                     
-  quotes_addr_0x[2] = USDCWBTC_0x_quote.addresses;
-  quotes_bytes_0x[2] = USDCWBTC_0x_quote.bytes;
-
-
-  
-
-
-  // await getUserReserveData_aave(usdcAddr, flashlogic.address, 'flashlogic', 10 ** 6);
-
-  // await getUserReserveData_aave('0xdAC17F958D2ee523a2206206994597C13D831ec7', callerContract, 'caller', 10 ** 6);
-
-  
-  // const path = [wethAddr, usdcAddr];
-  const IRouter = await hre.ethers.getContractAt('IUniswapV2Router02', uniswapRouterAddr);
-  // await IRouter.swapExactETHForTokens(1, path, signerAddr, MaxUint256, {
-  //   value: parseEther('376')
-  // });
-  // console.log('signer USDC balance: ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
-
-
-  // await IRouter.swapExactTokensForETH(1, path, signerAddr, MaxUint256, {
-  //   value: parseEther('376')
-  // });
-  // console.log('signer USDC balance: ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
-
-
-
+  //Initiates flashloan and transaction (MAIN CALL)
   await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
-    borrowed,
-    quotes_addr_0x,
-    quotes_bytes_0x
+    borrowed
   );
+
+
+
+
 
 
   console.log('.');
@@ -306,7 +179,9 @@ async function main() {
   const path = [wethAddr, usdcAddr];
   const IWETH_erc20 = await hre.ethers.getContractAt('MyIERC20', wethAddr);
   await IWETH_erc20.connect(dydxSign).approve(uniswapRouterAddr, MaxUint256);
-  await IRouter.connect(dydxSign).swapExactTokensForTokens(wethBalance, 1, path, signerAddr, MaxUint256);
+
+  const IUniRouter = await hre.ethers.getContractAt('IUniswapV2Router02', uniswapRouterAddr);
+  await IUniRouter.connect(dydxSign).swapExactTokensForTokens(wethBalance, 1, path, signerAddr, MaxUint256);
 
 
   await hre.network.provider.request({

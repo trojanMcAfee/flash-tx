@@ -10,14 +10,10 @@ import './interfaces/IDODOProxyV2.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/IBalancerV1.sol';
 import './interfaces/ICurve.sol';
-import './interfaces/I1inchProtocol.sol';
-import './interfaces/IExchange0xV2.sol';
 import './interfaces/ICroDefiSwapRouter02.sol';
 import './libraries/Helpers.sol';
 import './Swaper0x.sol'; 
 
-// import './interfaces/IDebtTokenAAVE/IVariableDebtToken.sol';
-import './interfaces/IConnectAAVE.sol';
 import './interfaces/IAaveProtocolDataProvider.sol';
 
 import "hardhat/console.sol";
@@ -25,8 +21,6 @@ import "hardhat/console.sol";
 
 contract FlashLoaner {
 
-    // using Helpers for bytes;
-    // using Helpers for string;
 
     MyIERC20 USDT = MyIERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     MyIERC20 WBTC = MyIERC20(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
@@ -42,56 +36,21 @@ contract FlashLoaner {
     ICurve dai_usdc_usdt_Pool = ICurve(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
     IUniswapV2Router02 sushiRouter = IUniswapV2Router02(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
     IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-    I1inchProtocol oneInch = I1inchProtocol(0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e);
     IBancorNetwork bancorNetwork = IBancorNetwork(IContractRegistry(ContractRegistry_Bancor).addressOf('BancorNetwork'));
     IBalancerV1 balancerWBTCETHpool_1 = IBalancerV1(0x221BF20c2Ad9e5d7eC8a9d1991d8E2EdcfCb9d6c);
     IBalancerV1 balancerWBTCETHpool_2 = IBalancerV1(0x1efF8aF5D577060BA4ac8A29A13525bb0Ee2A3D5);
     IBalancerV1 balancerETHUSDCpool = IBalancerV1(0x8a649274E4d777FFC6851F13d23A86BBFA2f2Fbf);
     IDODOProxyV2 dodoProxyV2 = IDODOProxyV2(0xa356867fDCEa8e71AEaF87805808803806231FdC);
-    IExchange0xV2 exchange0xV2 = IExchange0xV2(0x080bf510FCbF18b91105470639e9561022937712);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
     Swaper0x exchange;
     MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); 
     MyIERC20 aUSDC = MyIERC20(0xBcca60bB61934080951369a648Fb03DF4F96263C);
 
     IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
-    
-
-    struct FillResults {
-        uint256 makerAssetFilledAmount;  
-        uint256 takerAssetFilledAmount;  
-        uint256 makerFeePaid;            
-        uint256 takerFeePaid;            
-    }
-
-    struct Order {
-        address makerAddress;               
-        address takerAddress;              
-        address feeRecipientAddress;    
-        address senderAddress;         
-        uint256 makerAssetAmount;        
-        uint256 takerAssetAmount;           
-        uint256 makerFee;             
-        uint256 takerFee;              
-        uint256 expirationTimeSeconds;           
-        uint256 salt;                   
-        bytes makerAssetData;          
-        bytes takerAssetData;       
-    }
-
-    struct ZrxQuote {
-        address sellTokenAddress;
-        address buyTokenAddress;
-        address spender;
-        address swapTarget;
-        bytes swapCallData;
-    }
-
 
     address swaper0x;
     address revengeOfTheFlash;
     address offchainRelayer;
-
 
 
     constructor(address _swaper0x, address _revengeOfTheFlash, address _offchainRelayer) {
@@ -112,12 +71,7 @@ contract FlashLoaner {
 
 
 
-    function execute(
-        uint256 _borrowed, 
-        ZrxQuote calldata _USDCBNT_0x_quote, 
-        ZrxQuote calldata _TUSDWETH_0x_quote,
-        ZrxQuote calldata _USDCWBTC_0x_quote
-    ) public {
+    function execute(uint256 _borrowed) public {
         //General variables
         bool success;
         bytes memory returnData;
@@ -130,7 +84,6 @@ contract FlashLoaner {
         lendingPoolAAVE.deposit(address(WETH), _borrowed, address(this), 0); 
         console.log('2.- Deposit WETH to Aave: ', _borrowed / 1 ether);
 
-        // lendingPoolAAVE.borrow(address(USDC), usdcWithdrawal, 1, 0, address(this));
         lendingPoolAAVE.withdraw(address(USDC), usdcWithdrawal, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
         console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6);
@@ -149,21 +102,6 @@ contract FlashLoaner {
             console.log(Helpers._getRevertMsg(returnData));
         }
         require(success, 'USDC/BNT withdrawal from pool failed');
-
-
-        // (bool success, bytes memory returnData) = swaper0x.delegatecall(
-        //     abi.encodeWithSignature('fillQuote(address,address,address,address,bytes)',
-        //         _USDCBNT_0x_quote.sellTokenAddress,
-        //         _USDCBNT_0x_quote.buyTokenAddress,
-        //         _USDCBNT_0x_quote.spender,
-        //         _USDCBNT_0x_quote.swapTarget,
-        //         _USDCBNT_0x_quote.swapCallData 
-        //     )
-        // );
-        // require(success, 'USDCBNT 0x swap failed');
-        // if (!success) {
-        //     console.log(Helpers._getRevertMsg(returnData));
-        // }
         console.log('4.- BNT balance (swap 0x): ', BNT.balanceOf(address(this)) / 1 ether);
        
 
@@ -216,9 +154,7 @@ contract FlashLoaner {
         //Moving to Revenge
         (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall( 
             abi.encodeWithSignature(
-            'executeCont((address,address,address,address,bytes))', 
-             _TUSDWETH_0x_quote
-            )
+            'executeCont()')
         );
         if (!_success) {
             console.log(Helpers._getRevertMsg(data));
