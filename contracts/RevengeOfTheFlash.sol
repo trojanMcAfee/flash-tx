@@ -7,7 +7,7 @@ import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import './interfaces/MyIERC20.sol';
 import './interfaces/ICurve.sol';
 import './libraries/Helpers.sol';
-import './FlashLoaner.sol';
+import './Flashloaner.sol';
 import './Exchange.sol';
 import './libraries/MySafeERC20.sol';
 import './interfaces/ICroDefiSwapRouter02.sol';
@@ -45,11 +45,9 @@ contract RevengeOfTheFlash {
     IBalancerV1 balancerETHUSDCpool;
     IDODOProxyV2 dodoProxyV2;
     ICroDefiSwapRouter02 croDefiRouter;
-    Exchange exchange;
-    MyIERC20 aWETH;
-    MyIERC20 aUSDC;
-
     IAaveProtocolDataProvider aaveProtocolDataProvider;
+    Exchange exchange;
+
 
 
     address myExchange;
@@ -66,10 +64,7 @@ contract RevengeOfTheFlash {
         uint tradedAmount;
         uint amountTokenOut;
 
-        //0x - (TUSD to WETH)
-        console.log('9. - WETH balance before TUSD swap: ', WETH.balanceOf(address(this)));
-
-
+        //MY EXCHANGE - (TUSD to WETH)
         TUSD.transfer(offchainRelayer, 882693.24684888583010072 * 1 ether);
         (bool success, bytes memory returnData) = myExchange.call(
             abi.encodeWithSignature(
@@ -81,9 +76,7 @@ contract RevengeOfTheFlash {
             console.log(Helpers._getRevertMsg(returnData));
         }
         require(success, 'TUSD/WETH withdrawal from pool failed'); 
-
-
-        console.log('9. - WETH balance after TUSD swap: ', WETH.balanceOf(address(this)) / 1 ether);
+        console.log('9. - myEXCHANGE --- WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
 
         
         // UNISWAP - USDC to WBTC
@@ -95,7 +88,7 @@ contract RevengeOfTheFlash {
             'Uniswap USDC/WBTC',
             myExchange
         );
-        console.log('10.- WBTC balance after swap (Uniswap): ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmount);
+        console.log('10.- UNISWAP --- WBTC: ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmount);
 
         // DODO (USDC to WBTC)
         address WBTCUSD_DODO_pool = 0x2109F78b46a789125598f5ad2b7f243751c2934d;
@@ -107,10 +100,10 @@ contract RevengeOfTheFlash {
             'Dodo USDC/WBTC',
             myExchange
         );
-        console.log('11.- WBTC received after swap (DODO): ', tradedAmount / 10 ** 8, '--', tradedAmount);
+        console.log('11.- DODO --- WBTC: ', tradedAmount / 10 ** 8, '--', tradedAmount);
 
 
-        // 0x - (USDC to WBTC) -  
+        // MY EXCHANGE - (USDC to WBTC) - 
         USDC.transfer(offchainRelayer, 984272.740048 * 10 ** 6);
         (bool _success, bytes memory _returnData) = myExchange.call(
             abi.encodeWithSignature(
@@ -125,8 +118,8 @@ contract RevengeOfTheFlash {
         }
         require(_success, 'USDC/WBTC withdrawal from pool failed');
 
-        console.log('12.- Amount of WBTC traded (0x - pool): ', amountTokenOut / 10 ** 8);
-        console.log('___12.1.- WBTC balance after 0x swap (0x - 1Inch): ', WBTC.balanceOf(address(this)) / 10 ** 8);
+        console.log('12.- myEXCHANGE --- WBTC: ', amountTokenOut / 10 ** 8);
+        console.log('___12.1.- WBTC balance after swap: ', WBTC.balanceOf(address(this)) / 10 ** 8);
 
 
         // BALANCER
@@ -139,7 +132,7 @@ contract RevengeOfTheFlash {
             'Balancer WBTC/ETH (1)',
             myExchange
         );
-        console.log('13.- Amount of WETH received (1st Balancer swap): ', tradedAmount / 1 ether);
+        console.log('13.- BALANCER --- 1st WETH swap: ', tradedAmount / 1 ether);
         console.log('___13.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
 
         //(2nd WBTC/ETH swap)
@@ -151,7 +144,7 @@ contract RevengeOfTheFlash {
             'Balancer WBTC/ETH (2)',
             myExchange
         );
-        console.log('14.- Amount of WETH received (2nd Balancer swap): ', tradedAmount / 1 ether);
+        console.log('14.- BALANCER --- 2nd WETH swap: ', tradedAmount / 1 ether);
         console.log('___14.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
         
         // UNISWAP - (WBTC to ETH)

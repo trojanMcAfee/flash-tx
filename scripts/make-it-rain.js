@@ -105,13 +105,12 @@ async function main() {
   console.log('Revenge Of The Flash deployed to: ', revengeOfTheFlash.address);
 
   //Deploys the logic contract (and links the Helpers library to it)
-  const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner', {
+  const Flashloaner = await hre.ethers.getContractFactory('Flashloaner', {
     libraries: {
       Helpers: helpers.address
     }
   });
-  // const FlashLoaner = await hre.ethers.getContractFactory('FlashLoaner');
-  const flashlogic = await FlashLoaner.deploy(exchange.address, revengeOfTheFlash.address, offchainRelayer);
+  const flashlogic = await Flashloaner.deploy(exchange.address, revengeOfTheFlash.address, offchainRelayer);
   await flashlogic.deployed();
   await flashlogic.setExchange(exchange.address);
   console.log('flashlogic deployed to: ', flashlogic.address);
@@ -132,7 +131,7 @@ async function main() {
   await beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller);  
 
   console.log('.');
-  console.log('---------------------------------- Swaps ----------------------------------');
+  console.log('---------------------------------- Swaps (unless written otherwise) ----------------------------------');
   console.log('.');
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)

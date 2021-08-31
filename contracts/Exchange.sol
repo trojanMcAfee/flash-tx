@@ -44,11 +44,9 @@ contract Exchange {
     IBalancerV1 balancerETHUSDCpool;
     IDODOProxyV2 dodoProxyV2;
     ICroDefiSwapRouter02 croDefiRouter;
-    Exchange exchange;
-    MyIERC20 aWETH;
-    MyIERC20 aUSDC;
-
     IAaveProtocolDataProvider aaveProtocolDataProvider;
+    Exchange exchange;
+
 
 
 
@@ -204,12 +202,6 @@ contract Exchange {
             :
         _pool.exchange(_numTokenIn, _numTokenOut, _amountTokenIn, 1);
     }
-
-
-
-    
-
-
 
 
 

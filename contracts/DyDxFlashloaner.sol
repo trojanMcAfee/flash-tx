@@ -152,7 +152,7 @@ contract DyDxFlashloaner is ICallee {
             "Not enough funds to repay dydx loan!"
         );
 
-        console.log('1.- Borrow WETH from dYdX (flashloan): ', (MyIERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 1 ether);
+        console.log('1.- DYDX --- Borrow WETH (flashloan): ', (MyIERC20(mcd.token).balanceOf(address(this)) - 2 wei) / 1 ether);
         MyIERC20(mcd.token).transfer(logicContract, borrowed);
         executeCall(); 
     }

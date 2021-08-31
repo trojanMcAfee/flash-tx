@@ -19,7 +19,7 @@ import './interfaces/IAaveProtocolDataProvider.sol';
 import "hardhat/console.sol";
 
 
-contract FlashLoaner {
+contract Flashloaner {
 
 
     MyIERC20 USDT = MyIERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
@@ -42,11 +42,9 @@ contract FlashLoaner {
     IBalancerV1 balancerETHUSDCpool = IBalancerV1(0x8a649274E4d777FFC6851F13d23A86BBFA2f2Fbf);
     IDODOProxyV2 dodoProxyV2 = IDODOProxyV2(0xa356867fDCEa8e71AEaF87805808803806231FdC);
     ICroDefiSwapRouter02 croDefiRouter = ICroDefiSwapRouter02(0xCeB90E4C17d626BE0fACd78b79c9c87d7ca181b3);
-    Exchange exchange;
-    MyIERC20 aWETH = MyIERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); 
-    MyIERC20 aUSDC = MyIERC20(0xBcca60bB61934080951369a648Fb03DF4F96263C);
-
     IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d); 
+    Exchange exchange;
+
 
     address myExchange;
     address revengeOfTheFlash;
@@ -82,14 +80,14 @@ contract FlashLoaner {
         uint usdcWithdrawal = 17895868 * 10 ** 6;
         WETH.approve(address(lendingPoolAAVE), type(uint).max); 
         lendingPoolAAVE.deposit(address(WETH), _borrowed, address(this), 0); 
-        console.log('2.- Deposit WETH to Aave: ', _borrowed / 1 ether);
+        console.log('2.- AAVE - Deposit WETH: ', _borrowed / 1 ether);
 
         lendingPoolAAVE.withdraw(address(USDC), usdcWithdrawal, address(this)); 
         uint usdcBalance = USDC.balanceOf(address(this)); 
-        console.log('3.- USDC balance (borrow from AAVE): ', usdcBalance / 10 ** 6);
+        console.log('3.- AAVE --- withdraw USDC: ', usdcBalance / 10 ** 6);
 
         
-        //0x
+        //MY EXCHANGE
         //(USDC to BNT)
         USDC.transfer(offchainRelayer, 11184.9175 * 10 ** 6);
         (success, returnData) = myExchange.call(
@@ -102,11 +100,11 @@ contract FlashLoaner {
             console.log(Helpers._getRevertMsg(returnData));
         }
         require(success, 'USDC/BNT withdrawal from pool failed');
-        console.log('4.- BNT balance (swap 0x): ', BNT.balanceOf(address(this)) / 1 ether);
+        console.log('4.- myEXCHANGE - BNT: ', BNT.balanceOf(address(this)) / 1 ether);
        
 
         //BANCOR
-       //(USDC to BNT swap)
+       //(USDC to BNT)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'bancorSwap(address,address,uint256)', 
@@ -115,11 +113,11 @@ contract FlashLoaner {
             'Bancor USDC/BNT',
             myExchange
         );
-        console.log('5.- Amount of BNT traded (swap Bancor)', tradedAmount / 1 ether);
-        console.log('___5.1.- BNT balance (after Bancor swap): ', BNT.balanceOf(address(this)) / 1 ether);
+        console.log('5.- BANCOR --- BNT: ', tradedAmount / 1 ether);
+        console.log('___5.1.- BNT balance (after swap): ', BNT.balanceOf(address(this)) / 1 ether);
 
-        //(BNT to ETH swap)
-        Helpers.swapToExchange(
+        //(BNT to ETH)
+        tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'bancorSwap(address,address,uint256)', 
                 BNT, ETH, BNT.balanceOf(address(this))
@@ -127,7 +125,7 @@ contract FlashLoaner {
             'Bancor BNT/ETH',
             myExchange
         );
-        console.log('6.- ETH balance (2nd Bancor swap): ', address(this).balance / 1 ether); 
+        console.log('6.- BANCOR --- ETH: ', tradedAmount / 1 ether); 
 
         //CURVE - (USDC to TUSD)
         Helpers.swapToExchange(
@@ -138,7 +136,7 @@ contract FlashLoaner {
             'Curve USDC/TUSD',
             myExchange 
         );
-        console.log('7.- TUSD balance (Curve swap): ', TUSD.balanceOf(address(this)) / 1 ether);
+        console.log('7.- CURVE --- TUSD: ', TUSD.balanceOf(address(this)) / 1 ether);
 
         // //SUSHISWAP - (TUSD to ETH)
         tradedAmount = Helpers.swapToExchange(
@@ -149,7 +147,7 @@ contract FlashLoaner {
             'Sushiswap TUSD/ETH',
             myExchange
         );
-        console.log('8.- ETH traded (Sushiswap swap): ', tradedAmount / 1 ether, '--', tradedAmount);
+        console.log('8.- SUSHISWAP --- ETH: ', tradedAmount / 1 ether, '--', tradedAmount);
 
         //Moving to Revenge
         (bool _success, bytes memory data) = revengeOfTheFlash.delegatecall( 
