@@ -4,21 +4,17 @@ pragma abicoder v2;
 
 
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
-import './interfaces/IAaveProtocolDataProvider.sol';
-import './interfaces/ICroDefiSwapRouter02.sol';
-import './interfaces/IWETHgateway.sol';
-import './interfaces/MyIERC20.sol';
-import './libraries/MySafeERC20.sol';
-import './libraries/DataTypesAAVE.sol';
-import './interfaces/ICurve.sol';
-import './libraries/Helpers.sol';
-import './Flashloaner.sol';
-import './Exchange.sol';
+import '../interfaces/IAaveProtocolDataProvider.sol';
+import '../interfaces/ICroDefiSwapRouter02.sol';
+import '../interfaces/IWETHgateway.sol';
+import '../interfaces/MyIERC20.sol';
+import '../libraries/MySafeERC20.sol';
+import '../libraries/DataTypesAAVE.sol';
+import '../interfaces/ICurve.sol';
+import '../libraries/Helpers.sol';
+import '../periphery/Exchange.sol';
 
 import "hardhat/console.sol";
-
-
-
 
 
 
@@ -59,23 +55,13 @@ contract RevengeOfTheFlash {
 
 
     function executeCont() public {
-
         //General variables
         uint tradedAmount;
         uint amountTokenOut;
 
         //MY EXCHANGE - (TUSD to WETH)
         TUSD.transfer(offchainRelayer, 882693.24684888583010072 * 1 ether);
-        (bool success, bytes memory returnData) = myExchange.call(
-            abi.encodeWithSignature(
-                'withdrawFromPool(address,address,uint256)', 
-                WETH, address(this), 224.817255779374783216 * 1 ether
-            )
-        );
-        if (!success) {
-            console.log(Helpers._getRevertMsg(returnData));
-        }
-        require(success, 'TUSD/WETH withdrawal from pool failed'); 
+        exchange.withdrawFromPool(WETH, address(this), 224.817255779374783216 * 1 ether);
         console.log('9. - myEXCHANGE --- WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
 
         
@@ -90,7 +76,7 @@ contract RevengeOfTheFlash {
         );
         console.log('10.- UNISWAP --- WBTC: ', WBTC.balanceOf(address(this)) / 10 ** 8, '--', tradedAmount);
 
-        // DODO (USDC to WBTC)
+        // DODO - (USDC to WBTC)
         address WBTCUSD_DODO_pool = 0x2109F78b46a789125598f5ad2b7f243751c2934d;
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
@@ -103,7 +89,7 @@ contract RevengeOfTheFlash {
         console.log('11.- DODO --- WBTC: ', tradedAmount / 10 ** 8, '--', tradedAmount);
 
 
-        // MY EXCHANGE - (USDC to WBTC) - 
+        // MY EXCHANGE (other way) - (USDC to WBTC) - 
         USDC.transfer(offchainRelayer, 984272.740048 * 10 ** 6);
         (bool _success, bytes memory _returnData) = myExchange.call(
             abi.encodeWithSignature(
@@ -122,8 +108,7 @@ contract RevengeOfTheFlash {
         console.log('___12.1.- WBTC balance after swap: ', WBTC.balanceOf(address(this)) / 10 ** 8);
 
 
-        // BALANCER
-        //(1st WBTC to ETH swap)
+        //BALANCER - (1st WBTC to ETH swap)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'balancerSwapV1(address,uint256,address,address)', 
@@ -135,7 +120,7 @@ contract RevengeOfTheFlash {
         console.log('13.- BALANCER --- 1st WETH swap: ', tradedAmount / 1 ether);
         console.log('___13.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
 
-        //(2nd WBTC/ETH swap)
+        //BALANCER - (2nd WBTC/ETH swap)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'balancerSwapV1(address,uint256,address,address)', 
@@ -147,7 +132,7 @@ contract RevengeOfTheFlash {
         console.log('14.- BALANCER --- 2nd WETH swap: ', tradedAmount / 1 ether);
         console.log('___14.1.- ETH balance after conversion from WETH: ', address(this).balance / 1 ether);
         
-        // UNISWAP - (WBTC to ETH)
+        //UNISWAP - (WBTC to ETH)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'sushiUniCro_swap(address,uint256,address,address,uint256)', 
@@ -156,9 +141,9 @@ contract RevengeOfTheFlash {
             'Uniswap WBTC/ETH',
             myExchange
         );
-        console.log('15.- Amount of ETH received (Uniswap): ', tradedAmount / 1 ether);
+        console.log('15.- UNISWAP -- ETH: ', tradedAmount / 1 ether);
 
-        // SUSHIWAP - (WBTC to ETH)
+        //SUSHIWAP - (WBTC to ETH)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'sushiUniCro_swap(address,uint256,address,address,uint256)', 
@@ -167,10 +152,10 @@ contract RevengeOfTheFlash {
             'Sushiswap WBTC/ETH',
             myExchange
         );
-        console.log('16.- Amount of ETH received (Sushiswap): ', tradedAmount / 1 ether);
+        console.log('16.- SUSHISWAP --- ETH received: ', tradedAmount / 1 ether);
 
 
-        // 0x - (WBTC to WETH) - (using -deprecated- 1Inch protocol) 
+        // MY EXCHANGE (other way) - (WBTC to WETH) 
         WBTC.transfer(offchainRelayer, WBTC.balanceOf(address(this)));
         (bool _success_, bytes memory _returnData_) = myExchange.call(
             abi.encodeWithSignature(
@@ -184,7 +169,7 @@ contract RevengeOfTheFlash {
             (amountTokenOut) = abi.decode(_returnData_, (uint));
         }
         require(_success_, 'USDC/WBTC withdrawal from pool failed');
-        console.log('17.- WETH received (0x swap): ', amountTokenOut / 1 ether);
+        console.log('17.- myEXCHANGE --- WETH: ', amountTokenOut / 1 ether);
 
         
         // CURVE - (USDC to USDT)
@@ -196,9 +181,9 @@ contract RevengeOfTheFlash {
             'Curve USDC/USDT',
             myExchange
         );
-        console.log('18.- USDT balance after swap (Curve): ', USDT.balanceOf(address(this)) / 10 ** 6);
+        console.log('18.- CURVE --- USDT: ', USDT.balanceOf(address(this)) / 10 ** 6);
 
-        // CRO Protocol (USDT to WETH)
+        // CRO Protocol - (USDT to WETH)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'sushiUniCro_swap(address,uint256,address,address)', 
@@ -207,12 +192,12 @@ contract RevengeOfTheFlash {
             'CRO Protocol USDT/WETH',
             myExchange
         );
-        console.log('19.- WETH traded (CRO Protocol): ', tradedAmount / 1 ether);
+        console.log('19.- CRO Protocol - WETH: ', tradedAmount / 1 ether);
 
-        // 0x - (USDT to WETH) *******
+        // MY EXCHANGE - (USDT to WETH) 
         MySafeERC20.safeTransfer(USDT, offchainRelayer, 938699.561732 * 10 ** 6);
         tradedAmount = exchange.withdrawFromPool(WETH, address(this), 239.890714288415882321 * 1 ether);
-        console.log('20.- WETH withdrawn from the Exchange (0x): ', tradedAmount / 1 ether);
+        console.log('20.- myEXCHANGE --- WETH: ', tradedAmount / 1 ether);
 
         // SUSHISWAP - (USDT to ETH)
         tradedAmount = Helpers.swapToExchange(
@@ -236,7 +221,7 @@ contract RevengeOfTheFlash {
         );
         console.log('22. - UNISWAP --- ETH: ', tradedAmount / 1 ether);
 
-        // CRO Protocol (USDC to WETH)
+        // CRO Protocol - (USDC to WETH)
         tradedAmount = Helpers.swapToExchange(
             abi.encodeWithSignature(
                 'sushiUniCro_swap(address,uint256,address,address)', 
@@ -270,10 +255,10 @@ contract RevengeOfTheFlash {
         );
         console.log('25.- DODO --- WETH: ', tradedAmount / 1 ether);
 
-        // 0x - (USDC to WETH) *****
+        // MY EXCHANGE - (USDC to WETH)
         USDC.transfer(offchainRelayer, 905978.317545 * 10 ** 6);
         tradedAmount = exchange.withdrawFromPool(WETH, address(this), 231.15052891491875094 * 1 ether);
-        console.log('26.- 0x (MyExchange) --- WETH: ', tradedAmount / 1 ether);
+        console.log('26.- myEXCHANGE --- WETH: ', tradedAmount / 1 ether);
 
         // UNISWAP - (USDC to ETH)
         tradedAmount = Helpers.swapToExchange(
@@ -295,12 +280,11 @@ contract RevengeOfTheFlash {
             'Sushiswap USDC/ETH',
             myExchange
         );
-        // tradedAmount = sushiUniCro_swap(sushiRouter, 3422584.755171 * 10 ** 6, USDC, WETH, 1);
         console.log('28.- SUSHISWAP --- ETH: ', tradedAmount / 1 ether);
 
         // Convert to ETH the remainder of WETH
         WETH_int.deposit{value: address(this).balance}();
-        console.log('29.- WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
+        console.log('29.- WETH balance (flashlogic): ', WETH.balanceOf(address(this)) / 1 ether);
 
         // AAVE - (supply and withdraw WETH)
         lendingPoolAAVE.deposit(address(WETH), 4505.879348962757498457 * 1 ether, address(this), 0);
