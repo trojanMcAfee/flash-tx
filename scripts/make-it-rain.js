@@ -63,8 +63,6 @@ async function main() {
 }
 
 
-
-
   const usdcData_caller = await getUserReserveData_aave(usdcAddr, callerContract, 10 ** 6);
   const usdtData_caller = await getUserReserveData_aave(usdtAddr, callerContract, 10 ** 6);
   const wethData_caller = await getUserReserveData_aave(wethAddr, callerContract, 10 ** 18);
@@ -152,9 +150,6 @@ async function main() {
 
 
 
-
-
-
   console.log('.');
   console.log('---------------------------------- State of my contracts Post-Flash ----------------------------------');
   console.log('.');
@@ -214,16 +209,6 @@ async function main() {
   console.log('.');
 
   await showsCallersData(logsBalances, org_callerContract, org_msgSender, org_dYdX_flashloaner, org_logicContract);
-
-
-
-  
-
-
-
-
-
-
 
 
 }

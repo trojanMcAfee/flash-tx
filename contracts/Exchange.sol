@@ -1,21 +1,18 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import './interfaces/ICurve.sol';
-import './interfaces/MyIERC20.sol';
-import './interfaces/MyILendingPool.sol';
-import './interfaces/IBalancerV1.sol';
-import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
-import './interfaces/IDODOProxyV2.sol';
-import './interfaces/ICroDefiSwapRouter02.sol';
-import './libraries/MySafeERC20.sol';
-
-import './libraries/DataTypesAAVE.sol';
+import {IContractRegistry, IBancorNetwork} from './interfaces/IBancor.sol';
 import './interfaces/IAaveProtocolDataProvider.sol';
-
-
+import './interfaces/ICroDefiSwapRouter02.sol';
+import './interfaces/MyILendingPool.sol';
+import './libraries/DataTypesAAVE.sol';
+import './interfaces/IBalancerV1.sol';
+import './interfaces/IDODOProxyV2.sol';
+import './interfaces/ICurve.sol';
+import './interfaces/MyIERC20.sol';
+import './libraries/MySafeERC20.sol';
 import './libraries/Helpers.sol';
 
 import 'hardhat/console.sol';
@@ -48,16 +45,14 @@ contract Exchange {
     Exchange exchange;
 
 
-
+    event UserHealthFactor(uint hf);
 
     address myExchange;
     address revengeOfTheFlash;
 
     receive() external payable {}
 
-    event UserHealthFactor(uint hf);
     
-
 
     function getUserHealthFactor_aave(address _user) external {
         MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
@@ -66,30 +61,10 @@ contract Exchange {
     }
 
 
-
     function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external returns(uint) {
         _tokenOut.transfer(_recipient, _amountTokenOut);
         return _amountTokenOut;
     }
-
-
-    function fillQuote(
-        address sellToken,
-        address buyToken,
-        address spender,
-        address swapTarget,
-        bytes calldata swapCallData
-    ) external   
-    {        
-        require(MyIERC20(sellToken).approve(spender, type(uint).max));
-        (bool success, bytes memory returnData) = swapTarget.call(swapCallData);
-        if (!success) {
-            console.log(Helpers._getRevertMsg(returnData));
-        }
-        require(success, 'SWAP_CALL_FAILED');
-    }
-    
-    
 
 
     function bancorSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {
@@ -99,7 +74,6 @@ contract Exchange {
         uint amountTraded = bancorNetwork.convertByPath(path, _amount, minReturn, address(this), address(0x0), 0);
         return amountTraded;
     }
-
 
 
     function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {

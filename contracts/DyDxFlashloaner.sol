@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import './interfaces/MyIERC20.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
+import './interfaces/MyIERC20.sol';
 import './libraries/Helpers.sol';
 
 import "hardhat/console.sol";
