@@ -9,7 +9,6 @@ import '../interfaces/ICroDefiSwapRouter02.sol';
 import '../interfaces/IWETHgateway.sol';
 import '../interfaces/MyIERC20.sol';
 import '../libraries/MySafeERC20.sol';
-import '../libraries/DataTypesAAVE.sol';
 import '../interfaces/ICurve.sol';
 import '../libraries/Helpers.sol';
 import '../periphery/Exchange.sol';
@@ -44,14 +43,9 @@ contract RevengeOfTheFlash {
     IAaveProtocolDataProvider aaveProtocolDataProvider;
     Exchange exchange;
 
-
-
     address myExchange;
     address revengeOfTheFlash;
     address offchainRelayer;
-
-
-
 
 
     function executeCont() public {

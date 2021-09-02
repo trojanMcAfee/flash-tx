@@ -60,6 +60,8 @@ async function main() {
     console.log('WBTC balance: ', (await IWBTC.balanceOf(user)).toString() / 10 ** 8);
     console.log('TUSD balance: ', (await ITUSD.balanceOf(user)).toString() / 10 ** 18);
     console.log('BNT balance: ', (await IBNT.balanceOf(user)).toString() / 10 ** 18);
+
+    return Number(formatEther(await hre.ethers.provider.getBalance(user)));
 }
 
 
@@ -126,7 +128,7 @@ async function main() {
   console.log("--------------------------- Health Factor Management (AAVE's Lending Pool) ---------------------------");
   console.log('.');
 
-  await beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller);  
+  const callerHealthFactor_preDeposit = await beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller);  
 
   console.log('.');
   console.log('---------------------------------- Swaps (unless written otherwise) ----------------------------------');
@@ -142,11 +144,12 @@ async function main() {
 
 
   //Initiates flashloan and transaction (MAIN CALL)
-  await dxdxFlashloaner.initiateFlashLoan(
+  const tx = await dxdxFlashloaner.initiateFlashLoan(
     soloMarginAddr, 
     wethAddr, 
     borrowed
   );
+  
 
 
 
@@ -169,6 +172,7 @@ async function main() {
   });
   const dydxSign = await ethers.getSigner(dxdxFlashloaner.address);
 
+  //Calculates gross profits in USDC
   const wethBalance = await IWETH.connect(dydxSign).balanceOf(dxdxFlashloaner.address);
   const path = [wethAddr, usdcAddr];
   const IWETH_erc20 = await hre.ethers.getContractAt('MyIERC20', wethAddr);
@@ -184,11 +188,17 @@ async function main() {
   });
 
   console.log('.');
-  console.log('****** TOTAL PROFITS in USDC (signer address) ****** : ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
+  console.log('****** TOTAL GROSS PROFITS in USDC (signer) ****** : ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
   console.log('.');
 
+  const gasPrice = (await tx.gasPrice).toString();
+  const gasUsed = ((await tx.wait()).gasUsed).toString();
+  console.log('Gas price: ', gasPrice);
+  console.log('Gas used: ', gasUsed);
+  console.log('TOTAL GAS fees (in ETH): ',  (gasPrice * gasUsed) / 10 ** 18);
 
 
+  console.log('.');
   console.log('--------------------------- State of main origin contracts Post-Flash ---------------------------');
   console.log('.');
 
@@ -208,8 +218,11 @@ async function main() {
   console.log('ETH balance of original msg.sender (pre-flashloan): ', formatEther(orgBalanceETH));
   console.log('.');
 
-  await showsCallersData(logsBalances, org_callerContract, org_msgSender, org_dYdX_flashloaner, org_logicContract);
-
+  const debtDataMsgSender = await showsCallersData(logsBalances, org_callerContract, org_msgSender, org_dYdX_flashloaner, org_logicContract);
+  console.log('.');
+  console.log('****** TOTAL NET PROFITS in ETH (original signer) after GAS fees ****** : ', debtDataMsgSender.ETHbalanceMsgSender - formatEther(orgBalanceETH));
+  console.log('****** Marginal variance HEALTH FACTOR ****** : ', debtDataMsgSender.healthFactor - callerHealthFactor_preDeposit);
+  console.log('.');
 
 }
 

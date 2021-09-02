@@ -7,7 +7,6 @@ import {IContractRegistry, IBancorNetwork} from '../interfaces/IBancor.sol';
 import '../interfaces/IAaveProtocolDataProvider.sol';
 import '../interfaces/ICroDefiSwapRouter02.sol';
 import '../interfaces/MyILendingPool.sol';
-import '../libraries/DataTypesAAVE.sol';
 import '../interfaces/IBalancerV1.sol';
 import '../interfaces/IDODOProxyV2.sol';
 import '../interfaces/ICurve.sol';

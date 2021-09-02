@@ -2,9 +2,6 @@
 pragma solidity ^0.8.0;
 
 
-import '../libraries/DataTypesAAVE.sol';
-
-
 
 interface MyILendingPool {
 
@@ -29,7 +26,6 @@ interface MyILendingPool {
     address to
   ) external returns (uint256);
 
-  function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
 
   function getUserAccountData(address user)
     external

@@ -67,6 +67,7 @@ contract DyDxFlashloaner is ICallee {
     IWETH private WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     ISoloMargin private soloMargin = ISoloMargin(0x1E0447b19BB6EcFdAe1e4AE1694b0C3659614e4e);
 
+
     constructor(address _logicContract, uint _borrowed) {
         WETH.approve(address(soloMargin), type(uint).max);
         logicContract = _logicContract;

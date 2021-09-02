@@ -169,7 +169,7 @@ async function beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_
     const flashlogicHealthFactor = await getHealthFactor(flashlogic.address, exchange);
     console.log("Flashlogic's health factor after movements (forbids USDC withdrawals): ", Number(flashlogicHealthFactor));
 
-    
+    return Number(callerHealthFactor_preDeposit);
 
 }
 

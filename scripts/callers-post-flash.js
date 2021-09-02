@@ -12,14 +12,20 @@ async function getUserAccountData_aave(user) {
         'ltv',
         'healthFactor'
     ];
+    let healthFactor;
 
     for (let i = 0; i < str.length; i++) {
-        if (str[i] === 'currentLiquidationThreshold' || str[i] === 'ltv') {
-            console.log(str[i] + ': ' + tx[i]);
+        let debtProp = str[i];
+        let txProp = tx[i];
+        if (debtProp === 'currentLiquidationThreshold' || debtProp === 'ltv') {
+            console.log(debtProp + ': ' + txProp);
         } else {
-            console.log(str[i] + ': ' + formatEther(tx[i]));
+            console.log(debtProp + ': ' + formatEther(txProp));
+            if (debtProp === 'healthFactor') healthFactor = formatEther(txProp);
         }
     }
+
+    return healthFactor;
 }
 
 
@@ -29,13 +35,13 @@ async function showsCallersData(logsBalances, callerContract, msgSender, dYdX_fl
     let signerStr = msgSender !== '0x4cb2b6dcb8da65f8421fed3d44e0828e07594a60' ? 'Signer' : 'msg.sender';
 
     console.log(`${callerStr}'s debt: `);
-    await getUserAccountData_aave(callerContract);
+    const healthFactor = await getUserAccountData_aave(callerContract);
     console.log('.');
     console.log(`Balances of ${callerStr}: `, callerContract);
     await logsBalances(callerContract);
     console.log('.');
     console.log(`Balances of ${signerStr}: `, msgSender);
-    await logsBalances(msgSender);
+    const ETHbalanceMsgSender = await logsBalances(msgSender); 
     console.log('.');
     if (logicContract) {
         console.log('Balances of logic contract: ', logicContract);
@@ -44,6 +50,11 @@ async function showsCallersData(logsBalances, callerContract, msgSender, dYdX_fl
     }
     console.log('Balances of dydx Flashloaner: ', dYdX_flashloaner);
     await logsBalances(dYdX_flashloaner);
+
+    return {
+        ETHbalanceMsgSender,
+        healthFactor
+    };
 }
 
 
