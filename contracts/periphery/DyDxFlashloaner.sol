@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 import '../interfaces/MyIERC20.sol';
 import '../libraries/Helpers.sol';
 
@@ -51,27 +52,40 @@ interface ISoloMargin {
 interface ICallee {
     function callFunction(address sender, Account.Info memory accountInfo, bytes memory data) external;
 }
+ 
 
 
 
-contract DyDxFlashloaner is ICallee {
+
+contract DyDxFlashloaner is ICallee, Ownable, Helpers {
 
     struct MyCustomData {
         address token;
         uint256 repayAmount;
     }
 
-    address public logicContract;
-    uint public borrowed;
+    address soloDyDx = 0x1E0447b19BB6EcFdAe1e4AE1694b0C3659614e4e;
+    address logicContract;
+    uint borrowed;
 
     IWETH private WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    ISoloMargin private soloMargin = ISoloMargin(0x1E0447b19BB6EcFdAe1e4AE1694b0C3659614e4e);
+    ISoloMargin private soloMargin = ISoloMargin(soloDyDx);
 
+    modifier onlySolo() {
+        require(msg.sender == soloDyDx, 'Only DyDx can call this function');
+        _;
+    }
 
     constructor(address _logicContract, uint _borrowed) {
         WETH.approve(address(soloMargin), type(uint).max);
         logicContract = _logicContract;
         borrowed = _borrowed;
+        console.log('msg.sender in constructor: ', msg.sender);
+        console.log('address(this) in constructor: ', address(this));
+        // setSecondOwners(_logicContract, address(this));
+        // _setSecondaryOwner(_logicContract);
+        // _setSecondaryOwner(address(this));
+        console.log('after adding it: ', secondaryOwners[address(this)]);
     }
     
     // This is the function we call
@@ -79,8 +93,8 @@ contract DyDxFlashloaner is ICallee {
         address _solo, 
         address _token, 
         uint256 _amount
-    ) external {
-
+    ) external onlyOwner {
+        console.log('msg.sender on initiateFlashloan: +++++++++', msg.sender);
         Actions.ActionArgs[] memory operations = new Actions.ActionArgs[](3);
 
         operations[0] = Actions.ActionArgs({
@@ -140,8 +154,9 @@ contract DyDxFlashloaner is ICallee {
     }
     
     // This is the function called by dydx after giving us the loan
-    function callFunction(address sender, Account.Info memory accountInfo, bytes memory data) external override {
+    function callFunction(address sender, Account.Info memory accountInfo, bytes memory data) external override onlySolo {
         // Decode the passed variables from the data object
+        console.log('dydx calling callFunction(): ^^^^^^^^', msg.sender);
         ( MyCustomData memory mcd ) = abi.decode(
             data, 
             (MyCustomData)
@@ -160,18 +175,15 @@ contract DyDxFlashloaner is ICallee {
 
 
     function executeCall() private returns(uint, string memory) {
-
+        console.log('in dydx-flashloaner: ', msg.sender, ' ', secondaryOwners[msg.sender]);
         (bool success, bytes memory data) = logicContract.call(
                 abi.encodeWithSignature(
                     'execute(uint256)',
                      borrowed
                 )
         );
-        if (!success) {
-            console.log(Helpers._getRevertMsg(data));
-            console.log('flashloan failed');
-        }
-        require(success, 'Call failed');
+        if (!success) console.log(_getRevertMsg(data));
+        require(success, 'DyDx Flashloan failed');
         return (0, '');
     }
 

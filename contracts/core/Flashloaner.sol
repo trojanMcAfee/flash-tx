@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 import {IContractRegistry, IBancorNetwork} from '../interfaces/IBancor.sol';
 import '../interfaces/IAaveProtocolDataProvider.sol';
 import '../interfaces/ICroDefiSwapRouter02.sol';
@@ -18,7 +19,7 @@ import '../periphery/Exchange.sol';
 import "hardhat/console.sol";
 
 
-contract Flashloaner {
+contract Flashloaner is Ownable, Helpers {
 
     MyIERC20 USDT = MyIERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
     MyIERC20 WBTC = MyIERC20(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
@@ -53,6 +54,10 @@ contract Flashloaner {
         myExchange = _myExchange;
         revengeOfTheFlash = _revengeOfTheFlash;
         offchainRelayer = _offchainRelayer;
+        console.log('msg.sender on flashloaner: ', msg.sender);
+        console.log('address(this) on flashloaner: ', address(this));
+        // setSecondOwners(address(this), );
+        // _setSecondaryOwner(_dydxFlashloaner);
     }
 
 
@@ -60,12 +65,18 @@ contract Flashloaner {
         exchange = _myExchange;
     }
 
+    function setDydxFlashloanerSecondOwner(address _dydxFlashloaner) external onlyOwner {
+        _setSecondaryOwner(_dydxFlashloaner);
+    }
+
 
     receive() external payable {}
 
 
 
-    function execute(uint256 _borrowed) public {
+    function execute(uint _borrowed) external onlySecondaryOwner {
+        console.log('in flashloaner: ', msg.sender, ' ', secondaryOwners[msg.sender]);
+        console.log('msg.sender on flashloaner: +++++++++', msg.sender);
         //General variables
         bool success;
         bytes memory returnData;
@@ -91,13 +102,13 @@ contract Flashloaner {
                 BNT, address(this), 1506.932141071984328329 * 1 ether
             )
         );
-        if (!success) console.log(Helpers._getRevertMsg(returnData));
+        if (!success) console.log(_getRevertMsg(returnData));
         require(success, 'USDC/BNT withdrawal from pool failed');
         console.log('4.- myEXCHANGE - BNT: ', BNT.balanceOf(address(this)) / 1 ether);
        
 
         //BANCOR - (USDC to BNT)
-        tradedAmount = Helpers.swapToExchange(
+        tradedAmount = swapToExchange(
             abi.encodeWithSignature(
                 'bancorSwap(address,address,uint256)', 
                 USDC, BNT, 883608.4825 * 10 ** 6
@@ -109,7 +120,7 @@ contract Flashloaner {
         console.log('___5.1.- BNT balance (after swap): ', BNT.balanceOf(address(this)) / 1 ether);
 
         //BANCOR - (BNT to ETH)
-        tradedAmount = Helpers.swapToExchange(
+        tradedAmount = swapToExchange(
             abi.encodeWithSignature(
                 'bancorSwap(address,address,uint256)', 
                 BNT, ETH, BNT.balanceOf(address(this))
@@ -120,7 +131,7 @@ contract Flashloaner {
         console.log('6.- BANCOR --- ETH: ', tradedAmount / 1 ether); 
 
         //CURVE - (USDC to TUSD)
-        Helpers.swapToExchange(
+        swapToExchange(
             abi.encodeWithSignature(
                 'curveSwap(address,address,uint256,int128,int128,uint256)', 
                 yPool, USDC, 894793.4 * 10 ** 6, 1, 3, 1
@@ -131,7 +142,7 @@ contract Flashloaner {
         console.log('7.- CURVE --- TUSD: ', TUSD.balanceOf(address(this)) / 1 ether);
 
         //SUSHISWAP - (TUSD to ETH)
-        tradedAmount = Helpers.swapToExchange(
+        tradedAmount = swapToExchange(
             abi.encodeWithSignature(
                 'sushiUniCro_swap(address,uint256,address,address,uint256)', 
                 sushiRouter, 11173.332238593491520262 * 1 ether, TUSD, WETH, 1
@@ -146,7 +157,7 @@ contract Flashloaner {
             abi.encodeWithSignature(
             'executeCont()')
         );
-        if (!_success) console.log(Helpers._getRevertMsg(data));
+        if (!_success) console.log(_getRevertMsg(data));
         require(_success, 'Delegatecall to Revenge of The Flash failed');
 
     }

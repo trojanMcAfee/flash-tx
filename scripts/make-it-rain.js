@@ -79,37 +79,40 @@ async function main() {
 
 
   //Deploy the Helpers library
-  const Helpers = await hre.ethers.getContractFactory('Helpers');
-  const helpers = await Helpers.deploy();
-  await helpers.deployed();
-  console.log('Helpers deployed to: ', helpers.address);
+  // const Helpers = await hre.ethers.getContractFactory('Helpers');
+  // const helpers = await Helpers.deploy();
+  // await helpers.deployed();
+  // console.log('Helpers deployed to: ', helpers.address);
 
   //Deploys the Exchange contract
-  const Exchange = await hre.ethers.getContractFactory('Exchange', {
-    libraries: {
-      Helpers: helpers.address
-    }
-  });
+  // const Exchange = await hre.ethers.getContractFactory('Exchange', {
+  //   libraries: {
+  //     Helpers: helpers.address
+  //   }
+  // });
+  const Exchange = await hre.ethers.getContractFactory('Exchange');
   const exchange = await Exchange.deploy();
   await exchange.deployed();
   console.log('Exchange deployed to: ', exchange.address);
   
   //Deploys the 2nd part of the logic contract first
-  const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash', {
-    libraries: {
-      Helpers: helpers.address
-    }
-  });
+  // const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash', {
+  //   libraries: {
+  //     Helpers: helpers.address
+  //   }
+  // });
+  const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash');
   const revengeOfTheFlash = await RevengeOfTheFlash.deploy();
   await revengeOfTheFlash.deployed();
   console.log('Revenge Of The Flash deployed to: ', revengeOfTheFlash.address);
 
   //Deploys the logic contract (and links the Helpers library to it)
-  const Flashloaner = await hre.ethers.getContractFactory('Flashloaner', {
-    libraries: {
-      Helpers: helpers.address
-    }
-  });
+  // const Flashloaner = await hre.ethers.getContractFactory('Flashloaner', {
+  //   libraries: {
+  //     Helpers: helpers.address
+  //   }
+  // });
+  const Flashloaner = await hre.ethers.getContractFactory('Flashloaner');
   const flashlogic = await Flashloaner.deploy(exchange.address, revengeOfTheFlash.address, offchainRelayer);
   await flashlogic.deployed();
   await flashlogic.setExchange(exchange.address);
@@ -121,7 +124,10 @@ async function main() {
   const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
   await dxdxFlashloaner.deployed();
   console.log("dYdX_flashloaner deployed to:", dxdxFlashloaner.address);
+  await flashlogic.setDydxFlashloanerSecondOwner(dxdxFlashloaner.address);
   console.log('.');
+
+  await exchange.setFlashloanerSecondOwner(flashlogic.address);
 
 
 

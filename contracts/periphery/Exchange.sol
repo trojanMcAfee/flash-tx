@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 import {IContractRegistry, IBancorNetwork} from '../interfaces/IBancor.sol';
 import '../interfaces/IAaveProtocolDataProvider.sol';
 import '../interfaces/ICroDefiSwapRouter02.sol';
@@ -18,7 +19,7 @@ import 'hardhat/console.sol';
 
 
 
-contract Exchange {
+contract Exchange is Ownable, Helpers {
 
     MyIERC20 USDT;
     MyIERC20 WBTC;
@@ -51,6 +52,10 @@ contract Exchange {
 
     receive() external payable {}
 
+    function setFlashloanerSecondOwner(address _flashloaner) external onlyOwner {
+        _setSecondaryOwner(_flashloaner);
+    }
+
     
 
     function getUserHealthFactor_aave(address _user) external {
@@ -60,13 +65,15 @@ contract Exchange {
     }
 
 
-    function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external returns(uint) {
+    function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external onlySecondaryOwner returns(uint) {
+        console.log('msg.sender on exchange: +++++++++', msg.sender);
         _tokenOut.transfer(_recipient, _amountTokenOut);
         return _amountTokenOut;
     }
 
 
     function bancorSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {
+        console.log('msg.sender on swapToExchange from call(): +++++++++', msg.sender);
         MyIERC20[] memory path = bancorNetwork.conversionPath(_tokenIn, _tokenOut);
         uint minReturn = bancorNetwork.rateByPath(path, _amount);
         _tokenIn.approve(address(bancorNetwork), _amount);
@@ -76,6 +83,7 @@ contract Exchange {
 
 
     function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {
+        console.log('msg.sender on swapToExchange from call(): +++++++++', msg.sender);
         address[] memory dodoPairs = new address[](1);
         dodoPairs[0] = _pool;
         address DODOapprove = 0xCB859eA579b28e02B87A1FDE08d087ab9dbE5149;
@@ -104,7 +112,7 @@ contract Exchange {
         MyIERC20 _tokenOut
     ) external returns(uint) {
         MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
-        address[] memory path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
+        address[] memory path = _createPath(address(_tokenIn), address(_tokenOut));
 
         uint[] memory tradedAmounts =_router.swapExactTokensForTokens(
             _amount,
@@ -126,7 +134,7 @@ contract Exchange {
         uint _dir
     ) external returns(uint) {
         MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
-        address[] memory _path = Helpers._createPath(address(_tokenIn), address(_tokenOut));
+        address[] memory _path = _createPath(address(_tokenIn), address(_tokenOut));
         uint[] memory tradedAmounts = 
             _dir == 1 
                 ? 
