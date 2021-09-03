@@ -26,7 +26,11 @@ abstract contract Helpers {
     }
 
 
-    function swapToExchange(bytes memory _encodedData, string memory _swapDesc, address _exchange) internal returns(uint tradedAmount) {
+    function swapToExchange(
+        bytes memory _encodedData, 
+        string memory _swapDesc, 
+        address _exchange
+    ) internal returns(uint tradedAmount) {
         (bool success, bytes memory returnData) = _exchange.delegatecall(_encodedData);
         if (success && returnData.length > 0) {
             (tradedAmount) = abi.decode(returnData, (uint256));

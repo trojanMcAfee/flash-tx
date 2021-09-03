@@ -105,9 +105,8 @@ async function beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_
     });
     
     //Deposits USDC to lending pool and borrows in order to match original caller's debt
-    const totalUSDCdeposit = usdcToBorrow; //usdcToBorrow + Number(callerBorrowedUSDC);
-    await IUSDC.connect(flashlogicSign).approve(lendingPoolAaveAddr, totalUSDCdeposit);
-    await lendingPoolAave.connect(flashlogicSign).deposit(usdcAddr, totalUSDCdeposit, flashlogic.address, 0);
+    await IUSDC.connect(flashlogicSign).approve(lendingPoolAaveAddr, usdcToBorrow);
+    await lendingPoolAave.connect(flashlogicSign).deposit(usdcAddr, usdcToBorrow, flashlogic.address, 0);
     await lendingPoolAave.connect(flashlogicSign).borrow(usdcAddr, Number(callerBorrowedUSDC), 2, 0, flashlogic.address);
 
     //Borrows USDT to finish matching with caller's health factor
