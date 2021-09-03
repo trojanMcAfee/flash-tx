@@ -26,6 +26,10 @@ MEV-Explore Dashboard:
 10. CRO Protocol (Crypto.com)
 11. 1Inch (in original tx)
 
+## Deployment
+
+It's a Hardhat mainnet fork that comes already with an Alchemy endpoint to an Archive node on an `.env` file, so install dependencies (`npm i`), and then run the main entry file (`make-it-rain.js`) with `npx hardhat run scripts/make-it-rain.js`.
+
 
 ## Structure of the project
 
@@ -105,7 +109,27 @@ This section on the logs compares the health factor and debt state within Aave's
 `Flashloaner`'s set up is made by `health-factor`. 
 
 
-## 
+## Post-flashloan state of my contracts and the originals 
+
+![My-contracts](./images/My-contracts.png)
+
+![Original-contracts](./images/Original-contracts.png)
+
+Compares between my contracts -after my transaction- and the contracts from the orginal transaction:
+
+- Balances on each ERC20 token transacted with (USDC, aUSDC, USDT, aUSDT, WETH, aWETH, WBTC, TUSD, BNT) and ETH. 
+- Health Factor.
+- Collateral in pool (in ETH).
+- Debt (in ETH).
+- Borrowing power (in ETH).
+- Among other values. 
+
+As you can see by the logs in both sections, the balances, state, and numbers of both groups of contracts are almost the same. So they finished the transaction with the same conditions. 
+
+
+## P/L
+
+
 
 
 
