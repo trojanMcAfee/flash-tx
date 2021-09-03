@@ -13,7 +13,7 @@ import '../interfaces/IDODOProxyV2.sol';
 import '../interfaces/ICurve.sol';
 import '../interfaces/MyIERC20.sol';
 import '../libraries/MySafeERC20.sol';
-import '../libraries/Helpers.sol';
+import './Helpers.sol';
 
 import 'hardhat/console.sol';
 
@@ -66,14 +66,12 @@ contract Exchange is Ownable, Helpers {
 
 
     function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external onlySecondaryOwner returns(uint) {
-        console.log('msg.sender on exchange: +++++++++', msg.sender);
         _tokenOut.transfer(_recipient, _amountTokenOut);
         return _amountTokenOut;
     }
 
 
     function bancorSwap(MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {
-        console.log('msg.sender on swapToExchange from call(): +++++++++', msg.sender);
         MyIERC20[] memory path = bancorNetwork.conversionPath(_tokenIn, _tokenOut);
         uint minReturn = bancorNetwork.rateByPath(path, _amount);
         _tokenIn.approve(address(bancorNetwork), _amount);
@@ -83,7 +81,6 @@ contract Exchange is Ownable, Helpers {
 
 
     function dodoSwapV1(address _pool, MyIERC20 _tokenIn, MyIERC20 _tokenOut, uint _amount) external returns(uint) {
-        console.log('msg.sender on swapToExchange from call(): +++++++++', msg.sender);
         address[] memory dodoPairs = new address[](1);
         dodoPairs[0] = _pool;
         address DODOapprove = 0xCB859eA579b28e02B87A1FDE08d087ab9dbE5149;

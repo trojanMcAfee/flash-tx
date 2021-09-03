@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '../interfaces/MyIERC20.sol';
-import '../libraries/Helpers.sol';
+import './Helpers.sol';
 
 import "hardhat/console.sol";
 
@@ -80,12 +80,6 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
         WETH.approve(address(soloMargin), type(uint).max);
         logicContract = _logicContract;
         borrowed = _borrowed;
-        console.log('msg.sender in constructor: ', msg.sender);
-        console.log('address(this) in constructor: ', address(this));
-        // setSecondOwners(_logicContract, address(this));
-        // _setSecondaryOwner(_logicContract);
-        // _setSecondaryOwner(address(this));
-        console.log('after adding it: ', secondaryOwners[address(this)]);
     }
     
     // This is the function we call
@@ -94,7 +88,7 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
         address _token, 
         uint256 _amount
     ) external onlyOwner {
-        console.log('msg.sender on initiateFlashloan: +++++++++', msg.sender);
+
         Actions.ActionArgs[] memory operations = new Actions.ActionArgs[](3);
 
         operations[0] = Actions.ActionArgs({
@@ -156,7 +150,6 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
     // This is the function called by dydx after giving us the loan
     function callFunction(address sender, Account.Info memory accountInfo, bytes memory data) external override onlySolo {
         // Decode the passed variables from the data object
-        console.log('dydx calling callFunction(): ^^^^^^^^', msg.sender);
         ( MyCustomData memory mcd ) = abi.decode(
             data, 
             (MyCustomData)
@@ -175,7 +168,6 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
 
 
     function executeCall() private returns(uint, string memory) {
-        console.log('in dydx-flashloaner: ', msg.sender, ' ', secondaryOwners[msg.sender]);
         (bool success, bytes memory data) = logicContract.call(
                 abi.encodeWithSignature(
                     'execute(uint256)',

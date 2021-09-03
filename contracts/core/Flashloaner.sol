@@ -13,7 +13,7 @@ import '../interfaces/IDODOProxyV2.sol';
 import '../interfaces/IBalancerV1.sol';
 import '../interfaces/MyIERC20.sol';
 import '../interfaces/ICurve.sol';
-import '../libraries/Helpers.sol';
+import '../periphery/Helpers.sol';
 import '../periphery/Exchange.sol'; 
 
 import "hardhat/console.sol";
@@ -54,10 +54,6 @@ contract Flashloaner is Ownable, Helpers {
         myExchange = _myExchange;
         revengeOfTheFlash = _revengeOfTheFlash;
         offchainRelayer = _offchainRelayer;
-        console.log('msg.sender on flashloaner: ', msg.sender);
-        console.log('address(this) on flashloaner: ', address(this));
-        // setSecondOwners(address(this), );
-        // _setSecondaryOwner(_dydxFlashloaner);
     }
 
 
@@ -75,8 +71,6 @@ contract Flashloaner is Ownable, Helpers {
 
 
     function execute(uint _borrowed) external onlySecondaryOwner {
-        console.log('in flashloaner: ', msg.sender, ' ', secondaryOwners[msg.sender]);
-        console.log('msg.sender on flashloaner: +++++++++', msg.sender);
         //General variables
         bool success;
         bytes memory returnData;

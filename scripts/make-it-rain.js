@@ -78,47 +78,25 @@ async function main() {
   console.log('Deployer address: ', signerAddr);
 
 
-  //Deploy the Helpers library
-  // const Helpers = await hre.ethers.getContractFactory('Helpers');
-  // const helpers = await Helpers.deploy();
-  // await helpers.deployed();
-  // console.log('Helpers deployed to: ', helpers.address);
-
   //Deploys the Exchange contract
-  // const Exchange = await hre.ethers.getContractFactory('Exchange', {
-  //   libraries: {
-  //     Helpers: helpers.address
-  //   }
-  // });
   const Exchange = await hre.ethers.getContractFactory('Exchange');
   const exchange = await Exchange.deploy();
   await exchange.deployed();
   console.log('Exchange deployed to: ', exchange.address);
   
-  //Deploys the 2nd part of the logic contract first
-  // const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash', {
-  //   libraries: {
-  //     Helpers: helpers.address
-  //   }
-  // });
+  //Deploys the 2nd part of the logic contracts first
   const RevengeOfTheFlash = await hre.ethers.getContractFactory('RevengeOfTheFlash');
   const revengeOfTheFlash = await RevengeOfTheFlash.deploy();
   await revengeOfTheFlash.deployed();
   console.log('Revenge Of The Flash deployed to: ', revengeOfTheFlash.address);
 
-  //Deploys the logic contract (and links the Helpers library to it)
-  // const Flashloaner = await hre.ethers.getContractFactory('Flashloaner', {
-  //   libraries: {
-  //     Helpers: helpers.address
-  //   }
-  // });
+  //Deploys the first logic contract
   const Flashloaner = await hre.ethers.getContractFactory('Flashloaner');
   const flashlogic = await Flashloaner.deploy(exchange.address, revengeOfTheFlash.address, offchainRelayer);
   await flashlogic.deployed();
   await flashlogic.setExchange(exchange.address);
   console.log('flashlogic deployed to: ', flashlogic.address);
 
-  
   //Deploys the proxy where the loan is requested
   const DydxFlashloaner = await hre.ethers.getContractFactory('DyDxFlashloaner');
   const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
@@ -128,7 +106,6 @@ async function main() {
   console.log('.');
 
   await exchange.setFlashloanerSecondOwner(flashlogic.address);
-
 
 
   console.log("--------------------------- Health Factor Management (AAVE's Lending Pool) ---------------------------");
@@ -156,8 +133,6 @@ async function main() {
     borrowed
   );
   
-
-
 
   console.log('.');
   console.log('---------------------------------- State of my contracts Post-Flash ----------------------------------');
@@ -199,8 +174,8 @@ async function main() {
 
   const gasPrice = (await tx.gasPrice).toString();
   const gasUsed = ((await tx.wait()).gasUsed).toString();
-  console.log('Gas price: ', gasPrice);
-  console.log('Gas used: ', gasUsed);
+  console.log('Gas price: ', Number(gasPrice));
+  console.log('Gas used: ', Number(gasUsed));
   console.log('TOTAL GAS fees (in ETH): ',  (gasPrice * gasUsed) / 10 ** 18);
 
 

@@ -9,9 +9,9 @@ import '../interfaces/IAaveProtocolDataProvider.sol';
 import '../interfaces/ICroDefiSwapRouter02.sol';
 import '../interfaces/IWETHgateway.sol';
 import '../interfaces/MyIERC20.sol';
-import '../libraries/MySafeERC20.sol';
 import '../interfaces/ICurve.sol';
-import '../libraries/Helpers.sol';
+import '../libraries/MySafeERC20.sol';
+import '../periphery/Helpers.sol';
 import '../periphery/Exchange.sol';
 
 import "hardhat/console.sol";
@@ -48,14 +48,9 @@ contract RevengeOfTheFlash is Ownable, Helpers {
     address revengeOfTheFlash;
     address offchainRelayer;
 
-    // constructor() {
-    //     console.log('msg.sender on revenge: ', msg.sender);
-    //     console.log('address(this) on revenge: ', address(this));
-    // }
 
 
     function executeCont() public onlySecondaryOwner {
-        console.log('msg.sender on revenge: ', msg.sender);
         //General variables
         uint tradedAmount;
         uint amountTokenOut;

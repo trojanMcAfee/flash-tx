@@ -3,11 +3,10 @@ pragma solidity ^0.8.0;
 
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 
-abstract contract Helpers is Ownable {
+abstract contract Helpers {
 
     function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
         if (_returnData.length < 68) return 'Transaction reverted silently';
@@ -36,11 +35,5 @@ abstract contract Helpers is Ownable {
             revert();
         }
     }
-
-
-    // function setSecondOwners(address _secondaryOwner1, address _secondaryOwner2) internal {
-    //     _setSecondaryOwner(_secondaryOwner1);
-    //     _setSecondaryOwner(_secondaryOwner2);
-    // }
     
 }
