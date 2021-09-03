@@ -96,8 +96,16 @@ This file replaces six 0x swaps from the original transaction for a custom-made 
 The reason of this is because the original transaction uses an off-chain relayer for these trades which swaps are performed through the 0x SRA API v2. Due to the off-chain nature of these trades, a mainnet fork with an old pinned block cannot be deterministic since it can't access off-chain state from the past. 
 
 
-## Pre-Flashloan state of my contracts
+## Pre-flashloan state of my contracts (logs)
 
+![health-factor](./images/health-factor.png)
+
+This section on the logs compares the health factor and debt state within Aave's main liquidity pool between `Flashloaner` and the original caller contract. As you can see, both are almost identical so they're entering the flashloan with the same conditions.
+
+`Flashloaner`'s set up is made by `health-factor`. 
+
+
+## 
 
 
 
