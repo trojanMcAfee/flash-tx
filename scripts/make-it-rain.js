@@ -114,7 +114,7 @@ async function main() {
   const callerHealthFactor_preDeposit = await beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller);  
 
   console.log('.');
-  console.log('---------------------------------- Swaps (unless written otherwise) ----------------------------------');
+  console.log('--------------------------------------------- Swaps ----------------------------------------------');
   console.log('.');
 
   //Sends 2 gwei to the Proxy contract (dYdX flashloaner)
