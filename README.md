@@ -1,7 +1,7 @@
 # Flashbots Arbitrage
 This project is the recreation of a Flashbots arbitrage transaction made on May 14th, 2021 (pre-London). 
 
-According to the MEV-explore dashboard, it initially had a profit of $2,156,968.55, but after re-doing the transaction, I came up with a different P/L which I back up with on-chain data and their documentation.
+According to the MEV-explore dashboard, it initially had a profit of $2,156,968.55, but after re-doing the transaction, I came up with a different P/L which I back up with on-chain data and Flashbots documentation.
  
 
 ## Transaction
