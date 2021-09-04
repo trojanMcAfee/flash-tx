@@ -9,6 +9,7 @@ const burnerAddr = '0x000000000000000000000000000000000000dEaD';
 const usdtAddr = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 
 
+//Gets the health factor of an user
 async function getHealthFactor(user, exchange) {
     const tx = await exchange.getUserHealthFactor_aave(user);
     const receipt = await tx.wait();
@@ -18,7 +19,7 @@ async function getHealthFactor(user, exchange) {
 }
 
 
-
+//Gets the Reserve Data within Aave's liquidity pool of an user
 async function getUserReserveData_aave(asset, user, decimals) {
     const aaveDataProviderAddr = '0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d';
     const aaveDataProvider = await hre.ethers.getContractAt('IAaveProtocolDataProvider', aaveDataProviderAddr);
@@ -34,7 +35,7 @@ async function getUserReserveData_aave(asset, user, decimals) {
 
 
 
-
+//Sets the health factor and debt state of Flashlogic to match original caller's pre-flash
 async function beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller) {
 
     const aaveDataProvider = await hre.ethers.getContractAt('IAaveProtocolDataProvider', aaveDataProviderAddr);

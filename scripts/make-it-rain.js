@@ -49,6 +49,7 @@ async function main() {
   const ITUSD = await hre.ethers.getContractAt('MyIERC20', tusdAddr);
 
 
+  //Logs the balances from the ERC20 tokens that were transacted with
   async function logsBalances(user) {
     console.log('USDC balance: ', (await IUSDC.balanceOf(user)).toString() / 10 ** 6);
     console.log('aUSDC balance: ', (await IaUSDC.balanceOf(user)).toString() / 10 ** 6);
@@ -62,16 +63,16 @@ async function main() {
     console.log('BNT balance: ', (await IBNT.balanceOf(user)).toString() / 10 ** 18);
 
     return Number(formatEther(await hre.ethers.provider.getBalance(user)));
-}
+  }
 
-
+  //Gets the original Caller's reserve data from Aave's liquidity pool
   const usdcData_caller = await getUserReserveData_aave(usdcAddr, callerContract, 10 ** 6);
   const usdtData_caller = await getUserReserveData_aave(usdtAddr, callerContract, 10 ** 6);
   const wethData_caller = await getUserReserveData_aave(wethAddr, callerContract, 10 ** 18);
   
 
 
-  console.log('--------------------------- My deployed contracts ---------------------------');
+  console.log('---------------------------------------- My deployed contracts ----------------------------------------');
   console.log('.');
   const signer = await hre.ethers.provider.getSigner(0);
   const signerAddr = await signer.getAddress();
@@ -138,9 +139,10 @@ async function main() {
   console.log('---------------------------------- State of my contracts Post-Flash ----------------------------------');
   console.log('.');
 
+  //Logs the balances of Flashlogic
   await showsCallersData(logsBalances, flashlogic.address, signerAddr, dxdxFlashloaner.address);
 
-
+  //For paying for the fees of the WETH/USDC trade to calculate the gross profits in USDC
   await signer.sendTransaction({
     value: parseEther('0.1'),
     to: dxdxFlashloaner.address
@@ -172,6 +174,7 @@ async function main() {
   console.log('****** TOTAL GROSS PROFITS in USDC (signer) ****** : ', (await IUSDC.balanceOf(signerAddr)).toString() / 10 ** 6);
   console.log('.');
 
+  //Calculates the gas fees of my contracts 
   const gasPrice = (await tx.gasPrice).toString();
   const gasUsed = ((await tx.wait()).gasUsed).toString();
   console.log('Gas price: ', Number(gasPrice));
@@ -183,7 +186,7 @@ async function main() {
   console.log('--------------------------- State of main origin contracts Post-Flash ---------------------------');
   console.log('.');
 
-  //Resets the fork to the block before the flashloan
+  //Resets the fork to the block after the flashloan (for the calculation of the state of the original caller post-flash)
   await network.provider.request({
     method: "hardhat_reset",
     params: [
@@ -199,6 +202,7 @@ async function main() {
   console.log('ETH balance of original msg.sender (pre-flashloan): ', formatEther(orgBalanceETH));
   console.log('.');
 
+  //Logs the balances of the original contract
   const debtDataMsgSender = await showsCallersData(logsBalances, org_callerContract, org_msgSender, org_dYdX_flashloaner, org_logicContract);
   console.log('.');
   console.log('****** TOTAL NET PROFITS in ETH (original signer) after GAS fees ****** : ', debtDataMsgSender.ETHbalanceMsgSender - formatEther(orgBalanceETH));

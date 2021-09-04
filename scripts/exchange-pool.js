@@ -21,7 +21,6 @@ async function createPool(offchainRelayer, exchange, IBNT, IWETH, IWBTC) {
   //6th swap (USDC to WETH - transfer WETH)
   await IWETH.connect(signerImp).transfer(exchange.address, parseEther('231.15052891491875094'));
 
-
   await hre.network.provider.request({
     method: "hardhat_stopImpersonatingAccount",
     params: [offchainRelayer],
