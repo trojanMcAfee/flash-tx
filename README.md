@@ -2,7 +2,7 @@
 This project is the recreation of a Flashbots arbitrage transaction made on May 14th, 2021 (pre-London). 
 
 According to the MEV-explore dashboard, it initially had a profit of $2,156,968.55, but after re-doing the transaction, I came up with a different P/L which I back up with on-chain data, Flashbots documentation and a confirmation from their Discord server around the variance between numbers.
-
+ 
 
 ## Transaction
 Etherscan: https://etherscan.io/tx/0x3ab816a20fc30ff563c1a3730150e9da3c513fb127d82cf1cdf3ac4d989e3643
@@ -12,6 +12,7 @@ Tenderly: https://dashboard.tenderly.co/tx/mainnet/0x3ab816a20fc30ff563c1a373015
 MEV-Explore Dashboard: 
 
 ![MEV-explore](./images/MEV-explore.png)
+
 
 ## Protocols involved
 1. DyDx
@@ -128,6 +129,57 @@ As you can see by the logs in both sections, the balances, state, and numbers of
 
 
 ## P/L
+
+According to the MEV-Explore dashboard, this transaction had a profit of $2,156,968.55, but there are certain parameters that need to be taken into account:
+
+MEV-Inspect (Flashbot's tool for collecting and clasifying data):
+
+- Doesn't inspect Dodo, CRO Protocol, and 1Inch, which were used during this arbitrage. 
+    - TL;DR about 1Inch usage on the transaction: all swaps occur on a `JUMP` call to `OneInchExchange` contract.
+
+From original transaction:
+
+```js
+{
+  "[FUNCTION]": "getOneInchAddress",
+  "[OPCODE]": "JUMP",
+  "contract": {
+    "address": "0xc639e779ebedcc9394dd534a3cf8a2d164f1ee97"
+  },
+  "caller": {
+    "address": "0x691d4172331a11912c6d0e6d1a002e3d7ced6a66",
+    "balance": "999974880549365"
+  },
+  "[INPUT]": "0x",
+  "output": {
+    "0": *** "0x111111125434b319222cdbf8c261674adb56f3ae" ***
+  }
+}
+```
+
+```js
+{
+  "[FUNCTION]": "oneInchSwap",
+  "[OPCODE]": "JUMP",
+  "contract": {
+    "address": "0xc639e779ebedcc9394dd534a3cf8a2d164f1ee97"
+  },
+  "caller": {
+    "address": "0x691d4172331a11912c6d0e6d1a002e3d7ced6a66",
+    "balance": "999974880549365"
+  },
+  "output": {
+    "z": "4505879348962757498457" ---> output shown at the end of the tx on Etherscan
+  },
+  "gas": {
+    "gas_left": 5331973,
+    "gas_used": 3946537,
+    "total_gas_used": 3816584
+  }
+}
+```
+
+From Flashbots documentation:
 
 
 
