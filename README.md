@@ -87,6 +87,21 @@ Contains as well other helpers functions, like for decoding the response bytes d
 `callers-post-flash` logs the state of my contracts post my transaction, and the original contract's post the original transaction.
 
 
+## Swaps
+
+![swaps](./images/swaps.png)
+
+Unless writen otherwise (like "Borrow WETH..." or "Withdraw USDC"), the format of each swap on the logs is: 
+
+```js
+6.- BANCOR --- ETH:  224
+7.- CURVE --- TUSD:  893866
+```
+
+| Operation # | Protocol | Coin/Token received | Amount received |
+| ----- | ----- | ----- | ----- |
+
+
 ## Explanation of `exchange-pool`
 
 This file replaces six 0x swaps from the original transaction for a custom-made liquidity pool within the `Exchange` contract:
@@ -133,9 +148,9 @@ As you can see by the logs in both sections, the balances, state, and numbers of
 According to the MEV-Explore dashboard, this transaction had a profit of $2,156,968.55, but there are certain parameters that need to be taken into account. MEV-Inspect (Flashbot's tool for collecting and clasifying data):
 
 - Doesn't analyze Dodo, CRO Protocol, and 1Inch, which were used during this arbitrage. 
-    - TL;DR about 1Inch usage on the transaction: all swaps occur on a `JUMP` call to `OneInchExchange` (`0x111111125434b319222cdbf8c261674adb56f3ae`).
+    - TL;DR about 1Inch usage on the original transaction: all swaps occur on a `JUMP` call to `OneInchExchange` (`0x111111125434b319222cdbf8c261674adb56f3ae`).
 
-From original transaction:
+From original tx:
 
 ```js
 {
