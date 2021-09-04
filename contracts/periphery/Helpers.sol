@@ -35,7 +35,7 @@ abstract contract Helpers {
         if (success && returnData.length > 0) {
             (tradedAmount) = abi.decode(returnData, (uint256));
         } else if (!success) {
-            console.log(Helpers._getRevertMsg(returnData), '--', _swapDesc, 'failed');
+            console.log(_getRevertMsg(returnData), '--', _swapDesc, 'failed');
             revert();
         }
     }
