@@ -56,7 +56,6 @@ contract Exchange is Ownable, Helpers {
         _setSecondaryOwner(_flashloaner);
     }
 
-    
 
     function getUserHealthFactor_aave(address _user) external {
         MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
@@ -96,10 +95,8 @@ contract Exchange is Ownable, Helpers {
             false,
             block.timestamp
         );
-
         return tradedAmount;
     }
-
 
 
     function sushiUniCro_swap(
@@ -120,7 +117,6 @@ contract Exchange is Ownable, Helpers {
         );
         return tradedAmounts[1];
     }
-
 
 
     function sushiUniCro_swap(
@@ -160,7 +156,6 @@ contract Exchange is Ownable, Helpers {
             type(uint).max
         );
         WETH_int.withdraw(tradedAmount);
-
         return tradedAmount;
     }
 
@@ -180,8 +175,4 @@ contract Exchange is Ownable, Helpers {
             :
         _pool.exchange(_numTokenIn, _numTokenOut, _amountTokenIn, 1);
     }
-
-
-
-
 }

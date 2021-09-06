@@ -60,7 +60,6 @@ contract RevengeOfTheFlash is Ownable, Helpers {
         exchange.withdrawFromPool(WETH, address(this), 224.817255779374783216 * 1 ether);
         console.log('9. - myEXCHANGE --- WETH balance: ', WETH.balanceOf(address(this)) / 1 ether);
 
-        
         // UNISWAP - USDC to WBTC
         tradedAmount = swapToExchange(
             abi.encodeWithSignature(
@@ -84,7 +83,6 @@ contract RevengeOfTheFlash is Ownable, Helpers {
         );
         console.log('11.- DODO --- WBTC: ', tradedAmount / 10 ** 8, '--', tradedAmount);
 
-
         // MY EXCHANGE (other way) - (USDC to WBTC) - 
         USDC.transfer(offchainRelayer, 984272.740048 * 10 ** 6);
         (bool _success, bytes memory _returnData) = myExchange.call(
@@ -102,7 +100,6 @@ contract RevengeOfTheFlash is Ownable, Helpers {
 
         console.log('12.- myEXCHANGE --- WBTC: ', amountTokenOut / 10 ** 8);
         console.log('___12.1.- WBTC balance after swap: ', WBTC.balanceOf(address(this)) / 10 ** 8);
-
 
         //BALANCER - (1st WBTC to ETH swap)
         tradedAmount = swapToExchange(
@@ -150,7 +147,6 @@ contract RevengeOfTheFlash is Ownable, Helpers {
         );
         console.log('16.- SUSHISWAP --- ETH received: ', tradedAmount / 1 ether);
 
-
         // MY EXCHANGE (other way) - (WBTC to WETH) 
         WBTC.transfer(offchainRelayer, WBTC.balanceOf(address(this)));
         (bool _success_, bytes memory _returnData_) = myExchange.call(
@@ -167,7 +163,6 @@ contract RevengeOfTheFlash is Ownable, Helpers {
         require(_success_, 'USDC/WBTC withdrawal from pool failed');
         console.log('17.- myEXCHANGE --- WETH: ', amountTokenOut / 1 ether);
 
-        
         // CURVE - (USDC to USDT)
         swapToExchange(
             abi.encodeWithSignature(

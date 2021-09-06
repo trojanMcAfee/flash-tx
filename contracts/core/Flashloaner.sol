@@ -65,9 +65,7 @@ contract Flashloaner is Ownable, Helpers {
         _setSecondaryOwner(_dydxFlashloaner);
     }
 
-
     receive() external payable {}
-
 
 
     function execute(uint _borrowed) external onlySecondaryOwner {
@@ -75,7 +73,6 @@ contract Flashloaner is Ownable, Helpers {
         bool success;
         bytes memory returnData;
         uint tradedAmount;
-
 
         //AAVE
         uint usdcWithdrawal = 17895868 * 10 ** 6;
@@ -87,7 +84,6 @@ contract Flashloaner is Ownable, Helpers {
         uint usdcBalance = USDC.balanceOf(address(this)); 
         console.log('3.- AAVE --- withdraw USDC: ', usdcBalance / 10 ** 6);
 
-        
         //MY EXCHANGE - (USDC to BNT)
         USDC.transfer(offchainRelayer, 11184.9175 * 10 ** 6);
         (success, returnData) = myExchange.call(
@@ -100,7 +96,6 @@ contract Flashloaner is Ownable, Helpers {
         require(success, 'USDC/BNT withdrawal from pool failed');
         console.log('4.- myEXCHANGE - BNT: ', BNT.balanceOf(address(this)) / 1 ether);
        
-
         //BANCOR - (USDC to BNT)
         tradedAmount = swapToExchange(
             abi.encodeWithSignature(
@@ -155,8 +150,6 @@ contract Flashloaner is Ownable, Helpers {
         require(_success, 'Delegatecall to Revenge of The Flash failed');
 
     }
-
-
 }
 
 

@@ -33,8 +33,6 @@ async function getUserReserveData_aave(asset, user, decimals) {
 }
 
 
-
-
 //Sets the health factor and debt state of Flashlogic to match original caller's pre-flash
 async function beginManagement(signer, exchange, wethAddr, flashlogic, usdcData_caller, usdtData_caller, wethData_caller) {
 
