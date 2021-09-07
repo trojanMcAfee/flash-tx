@@ -84,7 +84,6 @@ contract Exchange is Ownable, Helpers {
         dodoPairs[0] = _pool;
         address DODOapprove = 0xCB859eA579b28e02B87A1FDE08d087ab9dbE5149;
         _tokenIn.approve(DODOapprove, type(uint).max);
-
         uint tradedAmount = dodoProxyV2.dodoSwapV1(
             address(_tokenIn),
             address(_tokenOut),
@@ -107,7 +106,6 @@ contract Exchange is Ownable, Helpers {
     ) external returns(uint) {
         MySafeERC20.safeApprove(_tokenIn, address(_router), _amount);
         address[] memory path = _createPath(address(_tokenIn), address(_tokenOut));
-
         uint[] memory tradedAmounts =_router.swapExactTokensForTokens(
             _amount,
             0,
@@ -134,7 +132,6 @@ contract Exchange is Ownable, Helpers {
             _router.swapExactTokensForETH(_amount, 0, _path, address(this), block.timestamp)
                 :
             _router.swapExactTokensForTokens(_amount, 0, _path, address(this), block.timestamp);
-
         return tradedAmounts[1];
     }
 
@@ -147,7 +144,6 @@ contract Exchange is Ownable, Helpers {
         MyIERC20 _tokenOut
     ) external returns(uint) {
         _tokenIn.approve(address(_pool), _amount);
-
         (uint tradedAmount, ) = _pool.swapExactAmountIn(
             address(_tokenIn), 
             _amount, 
