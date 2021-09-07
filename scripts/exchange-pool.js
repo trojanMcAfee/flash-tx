@@ -8,7 +8,7 @@ async function createPool(offchainRelayer, exchange, IBNT, IWETH, IWBTC) {
   });
 
   const signerImp = await ethers.getSigner(offchainRelayer);
-  //1st swap (USDC to BNT - transfer BNT) //call approve from the exchange contract
+  //1st swap (USDC to BNT - transfer BNT) 
   await IBNT.connect(signerImp).transfer(exchange.address, parseEther('1506.932141071984328329'));
   //2nd swap (TUSD to WETH - transfer WETH)
   await IWETH.connect(signerImp).transfer(exchange.address, parseEther('224.817255779374783216'));
