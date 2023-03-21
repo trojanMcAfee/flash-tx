@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 
 interface IDODOProxyV2 {
-
     function dodoSwapV1(
         address fromToken,
         address toToken,
@@ -17,5 +16,4 @@ interface IDODOProxyV2 {
         external
         payable
         returns (uint256 returnAmount);
-
 }

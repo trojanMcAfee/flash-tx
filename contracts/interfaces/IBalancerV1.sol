@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 
 interface IBalancerV1 {
-
-
     function swapExactAmountIn(
         address tokenIn,
         uint tokenAmountIn,
@@ -15,5 +13,4 @@ interface IBalancerV1 {
 
     function getNumTokens() external returns (uint);
     function getCurrentTokens() external view returns (address[] memory tokens);
-
 }

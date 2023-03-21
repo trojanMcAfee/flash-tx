@@ -41,7 +41,7 @@ async function main() {
   const IaUSDC = await hre.ethers.getContractAt('MyIERC20', aUSDCAddr);
   const IUSDT = await hre.ethers.getContractAt('MyIERC20', usdtAddr);
   const IaUSDT = await hre.ethers.getContractAt('MyIERC20', aUsdtAddr);
-  const IWETH = await hre.ethers.getContractAt('IWETH', wethAddr);
+  const IWETH = await hre.ethers.getContractAt('MyIERC20', wethAddr);
   const IaWETH = await hre.ethers.getContractAt('MyIERC20', aWethAddr);
   const IBNT = await hre.ethers.getContractAt('MyIERC20', bntAddr);
   const IWBTC = await hre.ethers.getContractAt('MyIERC20', wbtcAdr);
@@ -102,11 +102,7 @@ async function main() {
   const dxdxFlashloaner = await DydxFlashloaner.deploy(flashlogic.address, borrowed);
   await dxdxFlashloaner.deployed();
   console.log("dYdX_flashloaner deployed to:", dxdxFlashloaner.address);
-  await flashlogic.setDydxFlashloanerSecondOwner(dxdxFlashloaner.address);
   console.log('.');
-
-  await exchange.setFlashloanerSecondOwner(flashlogic.address);
-
 
   console.log("--------------------------- Health Factor Management (AAVE's Lending Pool) ---------------------------");
   console.log('.');

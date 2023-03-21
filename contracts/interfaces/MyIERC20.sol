@@ -10,4 +10,5 @@ interface MyIERC20 {
     function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
     function allowance(address owner, address spender) external view returns (uint256);
     function decimals() external view returns (uint8);
+    function deposit() external payable;
 }

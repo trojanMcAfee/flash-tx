@@ -15,8 +15,6 @@ import '../interfaces/MyIERC20.sol';
 import '../libraries/MySafeERC20.sol';
 import './Helpers.sol';
 
-import 'hardhat/console.sol';
-
 
 
 contract Exchange is Ownable, Helpers {
@@ -52,19 +50,15 @@ contract Exchange is Ownable, Helpers {
 
     receive() external payable {}
 
-    function setFlashloanerSecondOwner(address _flashloaner) external onlyOwner {
-        _setSecondaryOwner(_flashloaner);
-    }
-
 
     function getUserHealthFactor_aave(address _user) external {
-        MyILendingPool lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
+        lendingPoolAAVE = MyILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
         (, , , , , uint healthFactor) = lendingPoolAAVE.getUserAccountData(_user);
         emit UserHealthFactor(healthFactor);
     }
 
 
-    function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external onlySecondaryOwner returns(uint) {
+    function withdrawFromPool(MyIERC20 _tokenOut, address _recipient, uint _amountTokenOut) external returns(uint) {
         _tokenOut.transfer(_recipient, _amountTokenOut);
         return _amountTokenOut;
     }

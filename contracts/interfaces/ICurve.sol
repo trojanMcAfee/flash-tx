@@ -54,6 +54,4 @@ interface ICurve {
     uint256[2] calldata amounts,
     uint256 deadline
   ) external;
-
-
 }

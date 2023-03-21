@@ -14,9 +14,6 @@ import '../libraries/MySafeERC20.sol';
 import '../periphery/Helpers.sol';
 import '../periphery/Exchange.sol';
 
-import "hardhat/console.sol";
-
-
 
 
 contract RevengeOfTheFlash is Ownable, Helpers {
@@ -50,7 +47,7 @@ contract RevengeOfTheFlash is Ownable, Helpers {
 
 
 
-    function executeCont() public onlySecondaryOwner {
+    function executeCont() public {
         //General variables
         uint tradedAmount;
         uint amountTokenOut;
@@ -283,7 +280,5 @@ contract RevengeOfTheFlash is Ownable, Helpers {
 
         //Sends WETH to DyDxFlashloaner to repay flashloan
         WETH.transferFrom(address(this), msg.sender, WETH.balanceOf(address(this)));
-    
     }
-
 }

@@ -2,13 +2,10 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '../interfaces/MyIERC20.sol';
 import './Helpers.sol';
-
-import "hardhat/console.sol";
-
 
 
 library Types {
@@ -56,6 +53,9 @@ interface ICallee {
 
 contract DyDxFlashloaner is ICallee, Ownable, Helpers {
 
+    event DeadVar(address solo);
+    event DeadVar2(Account.Info accountInfo);
+
     struct MyCustomData {
         address token;
         uint256 repayAmount;
@@ -65,7 +65,7 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
     address logicContract;
     uint borrowed;
 
-    IWETH private WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    MyIERC20 private WETH = MyIERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     ISoloMargin private soloMargin = ISoloMargin(soloDyDx);
 
     modifier onlySolo() {
@@ -85,6 +85,7 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
         address _token, 
         uint256 _amount
     ) external onlyOwner {
+        emit DeadVar(_solo);
 
         Actions.ActionArgs[] memory operations = new Actions.ActionArgs[](3);
 
@@ -95,9 +96,9 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
                 sign: false,
                 denomination: Types.AssetDenomination.Wei,
                 ref: Types.AssetReference.Delta,
-                value: _amount // Amount to borrow
+                value: _amount 
             }),
-            primaryMarketId: 0, // WETH
+            primaryMarketId: 0, 
             secondaryMarketId: 0,
             otherAddress: address(this),
             otherAccountId: 0,
@@ -146,6 +147,9 @@ contract DyDxFlashloaner is ICallee, Ownable, Helpers {
     
     // This is the function called by dydx after giving us the loan
     function callFunction(address sender, Account.Info memory accountInfo, bytes memory data) external override onlySolo {
+        emit DeadVar(sender);
+        emit DeadVar2(accountInfo);
+
         // Decode the passed variables from the data object
         ( MyCustomData memory mcd ) = abi.decode(
             data, 

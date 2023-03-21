@@ -16,7 +16,6 @@ import '../interfaces/ICurve.sol';
 import '../periphery/Helpers.sol';
 import '../periphery/Exchange.sol'; 
 
-import "hardhat/console.sol";
 
 
 contract Flashloaner is Ownable, Helpers {
@@ -61,14 +60,11 @@ contract Flashloaner is Ownable, Helpers {
         exchange = _myExchange;
     }
 
-    function setDydxFlashloanerSecondOwner(address _dydxFlashloaner) external onlyOwner {
-        _setSecondaryOwner(_dydxFlashloaner);
-    }
 
     receive() external payable {}
 
 
-    function execute(uint _borrowed) external onlySecondaryOwner {
+    function execute(uint _borrowed) external {
         //General variables
         bool success;
         bytes memory returnData;
@@ -148,7 +144,6 @@ contract Flashloaner is Ownable, Helpers {
         );
         if (!_success) console.log(_getRevertMsg(data));
         require(_success, 'Delegatecall to Revenge of The Flash failed');
-
     }
 }
 
