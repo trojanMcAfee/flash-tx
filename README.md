@@ -29,7 +29,9 @@ MEV-Explore Dashboard:
 
 ## Deployment
 
-It's a Hardhat mainnet fork that comes already -in an `.env` file- with an Alchemy endpoint to an Archive node; so install dependencies (`npm i`), and then run the main entry file (`make-it-rain.js`) with `npx hardhat run scripts/make-it-rain.js`.
+It's a Hardhat mainnet fork that comes already -in an `.env` file- with an Alchemy endpoint to an Archive node:
+- Pull the right Docker image with `docker pull dnyrm/flash-tx:0.0.9`.
+- Run the container with `docker run -it dnyrm/flash-tx:0.0.9`.
 
 
 ## Structure of the project
