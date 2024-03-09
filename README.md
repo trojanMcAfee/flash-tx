@@ -29,7 +29,7 @@ MEV-Explore Dashboard:
 
 ## Deployment
 
-It's a Hardhat mainnet fork that comes already -in an `.env` file- with an Alchemy endpoint to an Archive node:
+It's a Hardhat mainnet fork that comes already -in an `.env` file- with an Alchemy endpoint to an Archive node, so for running it:
 - Pull the right Docker image with `docker pull dnyrm/flash-tx:0.0.9`.
 - Run the container with `docker run -it dnyrm/flash-tx:0.0.9`.
 
